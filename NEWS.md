@@ -1,5 +1,13 @@
 # pavo 2.4.0
 
+## NEW FEATURES AND SIGNIFICANT CHANGES
+
+* Add ability to compute colour volume by using alphashapes instead of convex 
+  hulls. The `tetrashape()`, `tcsshape()` are drop-in replacement for the 
+  `vol()`and `tcsvol()` functions while `overlap3d()` is the equivalent of 
+  `voloverlap()`. Please read the new vignette for more details about the 
+  benefits of alphashapes and how to determine the appropriate `avalue` value.
+
 ## MINOR FEATURES AND BUG FIXES
 
 * fix partial matching warnings in examples and in `bootcooldist()`
