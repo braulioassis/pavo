@@ -2,45 +2,40 @@
 #'
 #' Plot a CIE (XYZ, LAB, or LCH) chromaticity diagram.
 #'
-#'
-# #' @usage plot(ciedata, ...)
-#'
-#' @param ciedata (required). a data frame, possibly a result from the \code{colspace}
-#' or \code{cie} function, containing values for 'x', 'y' and 'z'  coordinates for the CIEXYZ
-#' model, or LAB coordinates for the CIELAB (or CIELCh models), as columns (labeled as such).
-#' @param mono should the monochromatic loci (the 'horseshoe') be
-#'    plotted when \code{space = 'ciexyz'}? Defaults to \code{TRUE}.
-#' @param out.lwd,out.lcol,out.lty graphical parameters for the monochromatic loci outline.
-#' @param theta angle to rotate the plot in the xy plane  when \code{space = 'cielab'}
-#' (defaults to 10).
-#' @param phi angle to rotate the plot in the yz plane  when \code{space = 'cielab'}
-#' (defaults to 45).
+#' @param ciedata (required). a data frame, possibly a result from the
+#'   [colspace()] or [cie()] function, containing values for 'x', 'y' and 'z'
+#'   coordinates for the CIEXYZ model, or LAB coordinates for the CIELAB (or
+#'   CIELCh models), as columns (labeled as such).
+#' @param mono should the monochromatic loci (the 'horseshoe') be plotted when
+#'   `space = "ciexyz"`? Defaults to `TRUE`.
+#' @param theta angle to rotate the plot in the xy plane  when
+#'   `space = "cielab"` (defaults to 10).
+#' @param phi angle to rotate the plot in the yz plane  when `space = "cielab"`
+#'   (defaults to 45).
 #' @param r the distance of the eyepoint from the center of the plotting box
-#' when \code{space = 'cielab'}. Very high values approximate an orthographic projection
-#' (defaults to 1e6). See \code{\link{persp}} for details.
-#' . See \code{\link{persp}} for details.
-#' @param zoom zooms in (values greater than 1) or out (values between 0 and 1) from the plotting area
-#' when \code{space = 'cielab'}.
-#' @param box logical. Should the plot area box and axes be plotted? (defaults to \code{FALSE})
-#' @param view, scale.y, axis, grid deprecated arguments.
-#' @param margin vector of four numbers specifying drawing margins for CIELAB plot
-#'   (defaults to c(0,0,0,0))
-#' @param ... Additional graphical options. See \code{\link{par}}.
+#'   when `space = "cielab"`. Very high values approximate an orthographic
+#'   projection (defaults to 1e6). See [graphics::persp()] for details.
+#' @param zoom zooms in (values greater than 1) or out (values between 0 and 1)
+#'   from the plotting area when `space = "cielab"`.
+#' @param box logical. Should the plot area box and axes be plotted? (defaults
+#'   to `FALSE`)
+#' @param margin vector of four numbers specifying drawing margins for CIELAB
+#'   plot (defaults to c(0,0,0,0))
+#' @param ciebg should the colour background be plotted for CIEXYZ plot?
+#'   (defaults to `TRUE`)
+#' @inheritParams triplot
 #'
 #' @examples
-#' \dontrun{
 #' data(flowers)
 #'
 #' # CIEXYZ
-#' vis.flowers <- vismodel(flowers, visual = 'cie10', illum = 'D65', vonkries = TRUE, relative = FALSE)
-#' xyz.flowers <- colspace(vis.flowers, space = 'ciexyz')
+#' vis.flowers <- vismodel(flowers, visual = "cie10", illum = "D65", vonkries = TRUE, relative = FALSE)
+#' xyz.flowers <- colspace(vis.flowers, space = "ciexyz")
 #' plot(xyz.flowers)
 #'
-#' #CIELAB
-#' lab.flowers <- colspace(vis.flowers, space = 'cielab')
+#' # CIELAB
+#' lab.flowers <- colspace(vis.flowers, space = "cielab")
 #' plot(lab.flowers)
-#' }
-#'
 #' @author Thomas White \email{thomas.white026@@gmail.com}
 #' @author Rafael Maia \email{rm72@@zips.uakron.edu}
 #'
@@ -50,16 +45,14 @@
 #'
 #' @importFrom grDevices trans3d
 #' @importFrom plot3D perspbox
+#' @importFrom magick image_read
 #'
-#' @references Smith T, Guild J. (1932) The CIE colorimetric standards and their use.
-#'    Transactions of the Optical Society, 33(3), 73-134.
-#' @references Westland S, Ripamonti C, Cheung V. (2012). Computational colour science
-#'    using MATLAB. John Wiley & Sons.
-#'
+#' @inherit cie references
+
 
 cieplot <- function(ciedata, mono = TRUE, out.lwd = NULL, out.lcol = "black",
                     out.lty = 1, theta = 45, phi = 10, r = 1e6, zoom = 1, box = FALSE,
-                    margin = c(0, 0, 0, 0), view, scale.y, axis, grid, ...) {
+                    margin = c(0, 0, 0, 0), ciebg = TRUE, ...) {
   arg <- list(...)
 
   # CIEXYZ
@@ -71,6 +64,9 @@ cieplot <- function(ciedata, mono = TRUE, out.lwd = NULL, out.lcol = "black",
     }
     if (is.null(arg$xaxp)) {
       arg$xaxp <- c(0, 0.9, 9)
+    }
+    if (is.null(arg$asp)) {
+      arg$asp <- 1
     }
     if (is.null(arg$yaxp)) {
       arg$yaxp <- c(0, 0.8, 8)
@@ -118,8 +114,13 @@ cieplot <- function(ciedata, mono = TRUE, out.lwd = NULL, out.lcol = "black",
 
     do.call(plot, c(arg, type = "n"))
 
+    if (ciebg) {
+      bg <- image_read(system.file("ciebg.png", package = "pavo"))
+      rasterImage(bg, min(monox), min(monoy), max(monox), max(monoy))
+    }
+
     if (mono == TRUE) {
-      polygon(monoy ~ monox, border = out.lcol, lty = out.lty, density = out.lwd)
+      polygon(monoy ~ monox, border = out.lcol, lty = out.lty, lwd = out.lwd)
     }
 
     # remove plot-specific args, add points after the stuff is drawn
@@ -128,24 +129,12 @@ cieplot <- function(ciedata, mono = TRUE, out.lwd = NULL, out.lcol = "black",
       "ann", "axes", "frame.plot", "panel.first", "panel.last", "asp"
     )] <- NULL
     do.call(points, arg)
+
+    invisible(NULL)
   }
 
   # CIELAB or CIELch
   if (attr(ciedata, "clrsp") == "CIELAB" | attr(ciedata, "clrsp") == "CIELCh") {
-
-    # check deprecated arguments view, scale.y, axis, grid
-    if (!missing(view)) {
-      stop('argument "view" is deprecated, please use "theta" and "phi" instead. see ?plot.colspace or ?tetraplot for more information.', call. = FALSE)
-    }
-    if (!missing(scale.y)) {
-      stop('argument "scale.y" is deprecated, please use "expand" instead. see ?plot.colspace or ?tetraplot for more information.', call. = FALSE)
-    }
-    if (!missing(axis)) {
-      stop('argument "axis" is deprecated, please use "box" instead. see ?plot.colspace or ?tetraplot for more information.', call. = FALSE)
-    }
-    if (!missing(grid)) {
-      stop('argument "grid" is deprecated. see ?plot.colspace or ?tetraplot for more information.', call. = FALSE)
-    }
 
     # Set defaults
     arg <- list(...)

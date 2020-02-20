@@ -3,42 +3,50 @@
 #' Uses a bootstrap procedure to generate confidence intervals
 #'  for the mean colour distance between two or more samples of colours
 #'
-#' @param vismodeldata (required) quantum catch color data.
-#'  Can be the result from \code{vismodel}, or \code{colspace}. Data may also be
+#' @param vismodeldata (required) quantum catch colour data.
+#'  Can be the result from [vismodel()], or [colspace()]. Data may also be
 #'  independently calculated quantum catches, in the form of a data frame with
 #'  columns representing photoreceptors.
-#' @param by (required) a vector containing indicating the group to which each row from
+#' @param by (required) a numeric or character vector indicating the group to which each row from
 #'  the object belongs to.
 #' @param boot.n number of bootstrap replicates (defaults to 1000)
 #' @param alpha the confidence level for the confidence intervals (defaults to 0.95)
-#' @param cores number of cores to be used in parallel processing. If \code{1}, parallel
-#'  computing will not be used. Defaults to \code{getOption("mc.cores", 2L)}
-#' @param ... other arguments to be passed to \code{\link{coldist}}. Must at minimum
-#' include \code{n} and \code{weber}. See \code{\link{coldist}} for details.
+#' @param ... other arguments to be passed to [coldist()]. Must at minimum
+#' include `n` and `weber`. See [coldist()] for details.
+#' @inheritParams getspec
+#' 
+#' @inherit getspec details
 #'
 #' @return a matrix including the empirical mean and bootstrapped
-#'  confidence limits for dS (and dL if \code{achro = TRUE}).
+#'  confidence limits for dS (and dL if `achro = TRUE`).
 #'
 #' @examples
 #' \dontrun{
-#'  data(sicalis)
-#'  vm <- vismodel(sicalis, achro='bt.dc')
-#'  gr <- gsub("ind..", "", rownames(vm))
-#'  bootcoldist(vm, gr, n = c(1, 2, 2, 4), weber = 0.1, weber.achro = 0.1, cores = 1)
-#'  }
+#' data(sicalis)
+#' vm <- vismodel(sicalis, achromatic = "bt.dc")
+#' gr <- gsub("ind..", "", rownames(vm))
+#' bootcoldist(vm, by = gr, n = c(1, 2, 2, 4), weber = 0.1, weber.achro = 0.1, cores = 1)
+#' }
 #'
 #' @export
-#' @importFrom pbmcapply pbmclapply
+#' @importFrom future.apply future_lapply
+#' @importFrom progressr with_progress progressor
 #' @importFrom stats aggregate
 #'
 #' @references Maia, R., White, T. E., (2018) Comparing colors using visual models.
-#'  Behavioral Ecology, ary017 doi: 10.1093/beheco/ary017.
+#'  Behavioral Ecology, ary017 \doi{10.1093/beheco/ary017}
 
 
 bootcoldist <- function(vismodeldata, by, boot.n = 1000, alpha = 0.95,
-                        cores = getOption("mc.cores", 2L), ...) {
-  if (!any(c("colspace", "vismodel") %in% class(vismodeldata))) {
+                        cores = NULL, ...) {
+  if (!is.vismodel(vismodeldata) && !is.colspace(vismodeldata)) {
     stop('object must be a "vismodel" or "colspace" result', call. = FALSE)
+  }
+
+  if (!missing(cores)) {
+    warning("'cores' argument is deprecated. See ?future::plan for more info ",
+            "about how you can choose your parallelisation strategy.", 
+            call. = FALSE)
   }
 
   # geometric mean
@@ -60,6 +68,12 @@ bootcoldist <- function(vismodeldata, by, boot.n = 1000, alpha = 0.95,
 
   arg0 <- list(...)
 
+  # 'achromatic' used to be called just 'achro' so let's work around it.
+  # TODO: add a warning about this so users update their scripts??
+  if (is.null(arg0$achromatic)) {
+    arg0$achromatic <- arg0$achro
+  }
+
   if (is.null(arg0$n)) {
     stop('argument "n" to be passed to "coldist" is missing', call. = FALSE)
   }
@@ -76,17 +90,17 @@ bootcoldist <- function(vismodeldata, by, boot.n = 1000, alpha = 0.95,
     arg0$qcatch <- attr(vismodeldata, "qcatch")
   }
 
-  if (is.null(arg0$achro)) {
+  if (is.null(arg0$achromatic)) {
     if (is.null(attr(vismodeldata, "visualsystem.achromatic"))) {
-      stop('argument "achro" to be passed to "coldist" is missing', call. = FALSE)
+      stop('argument "achromatic" to be passed to "coldist" is missing', call. = FALSE)
     }
 
     if (attr(vismodeldata, "visualsystem.achromatic") == "none") {
-      arg0$achro <- FALSE
+      arg0$achromatic <- FALSE
     }
 
     if (attr(vismodeldata, "visualsystem.achromatic") != "none") {
-      arg0$achro <- TRUE
+      arg0$achromatic <- TRUE
     }
   }
 
@@ -103,8 +117,6 @@ bootcoldist <- function(vismodeldata, by, boot.n = 1000, alpha = 0.95,
   if (is.null(arg0$weber.ref)) {
     arg0$weber.ref <- "longest"
   }
-
-
 
   sortinggroups <- order(by)
   vismodeldata <- vismodeldata[sortinggroups, ]
@@ -141,12 +153,12 @@ bootcoldist <- function(vismodeldata, by, boot.n = 1000, alpha = 0.95,
   names(bygroup) <- unique(by)
 
   # create vectors of indices to sample
-  its <- lapply(samplesizes, function(x) sample(1:x, x * boot.n, replace = TRUE))
+  its <- lapply(samplesizes, function(x) sample(seq_len(x), x * boot.n, replace = TRUE))
 
   # use the indices from its to sample from the data
   # returns a list with length = number of by
   # and rows = (sample size for that group) * (the number of bootstrap replicates) in each
-  bootsamples <- lapply(1:length(bygroup), function(x) bygroup[[x]][its[[x]], ])
+  bootsamples <- lapply(seq_along(bygroup), function(x) bygroup[[x]][its[[x]], ])
 
 
   # next, split by bootstrap replicate
@@ -154,26 +166,28 @@ bootcoldist <- function(vismodeldata, by, boot.n = 1000, alpha = 0.95,
   #
   # list with length = number of by
   # and values = index for the bootstrap replicate that sample belongs to
-  bootindex <- lapply(samplesizes, function(x) as.character(rep(1:boot.n, each = x)))
+  bootindex <- lapply(samplesizes, function(x) as.character(rep(seq_len(boot.n), each = x)))
 
   # use the index to break samples into bootstrap replicates
   # returns a list with length = number of by
   # each entry is itself a list with length = number of replicates
-  bootbygroup <- lapply(1:length(bygroup), function(x) {
+  bootbygroup <- lapply(seq_along(bygroup), function(x) {
     lapply(unique(bootindex[[x]]), function(z) bootsamples[[x]][bootindex[[x]] == z, ])
   })
 
   # now take the column means for all bootstrapped by
   # returns a list with length = number of by
   # each row in these = the (geometric) mean of bootstrap replicates
-  groupcolmeans <- lapply(bootbygroup, function(z)
-    do.call(rbind, lapply(z, function(x) apply(x, 2, gmean))))
+  groupcolmeans <- lapply(bootbygroup, function(z) {
+    do.call(rbind, lapply(z, function(x) apply(x, 2, gmean)))
+  })
 
   # now "split and merge"
   # creating a list with length = number of bootstrap replicates
   # and rows in each entry = mean per group in that replicate
-  bootgrouped <- lapply(1:boot.n, function(x)
-    do.call(rbind, lapply(groupcolmeans, "[", x, )))
+  bootgrouped <- lapply(seq_len(boot.n), function(x) {
+    do.call(rbind, lapply(groupcolmeans, "[", x, ))
+  })
 
   # ...name the rows by group
   bootgrouped <- lapply(bootgrouped, function(x) {
@@ -186,13 +200,8 @@ bootcoldist <- function(vismodeldata, by, boot.n = 1000, alpha = 0.95,
   attribs <- attributes(vismodeldata)
   attribs <- attribs[grep("data|names", names(attribs), invert = TRUE)]
 
-  for (i in seq_along(bootgrouped))
+  for (i in seq_along(bootgrouped)) {
     attributes(bootgrouped[[i]])[names(attribs)] <- attribs
-
-  # apply coldist to the replicated bootstraps
-  if (cores > 1 && .Platform$OS.type == "windows") {
-    cores <- 1
-    message('Parallel processing not available in Windows; "cores" set to 1\n')
   }
 
   tmpbootcdfoo <- function(x) {
@@ -200,23 +209,27 @@ bootcoldist <- function(vismodeldata, by, boot.n = 1000, alpha = 0.95,
     tmparg$modeldata <- x
     do.call(coldist, tmparg)
   }
-
-  bootcd <- pbmclapply(bootgrouped, function(z) {
-    tryCatch(tmpbootcdfoo(z),
-      error = function(e) NULL
-    )
-  }, mc.cores = cores)
-
+  
+  with_progress({
+    p <- progressor(along = bootgrouped)
+    bootcd <- future_lapply(bootgrouped, function(z) {
+      p()
+      tryCatch(tmpbootcdfoo(z),
+               error = function(e) NULL
+      )
+    })
+  })
 
   # get deltaS and name by group difference
   bootdS <- do.call(
     rbind,
-    lapply(bootcd, function(x)
-      setNames(x$dS, paste(x$patch1, x$patch2, sep = "-")))
+    lapply(bootcd, function(x) {
+      setNames(x$dS, paste(x$patch1, x$patch2, sep = "-"))
+    })
   )
 
   if (dim(bootdS)[1] < boot.n) {
-    stop('Bootstrap sampling encountered errors. Try using "cores = 1".')
+    stop('Bootstrap sampling encountered errors.')
   }
   # ...subtract them from the empirical
   # bootdS <- bootdS - empdS
@@ -243,8 +256,9 @@ bootcoldist <- function(vismodeldata, by, boot.n = 1000, alpha = 0.95,
 
     bootdL <- do.call(
       rbind,
-      lapply(bootcd, function(x)
-        setNames(x$dL, paste(x$patch1, x$patch2, sep = "-")))
+      lapply(bootcd, function(x) {
+        setNames(x$dL, paste(x$patch1, x$patch2, sep = "-"))
+      })
     )
 
     bootdL <- apply(bootdL, 2, sort)

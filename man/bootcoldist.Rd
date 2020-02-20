@@ -4,46 +4,52 @@
 \alias{bootcoldist}
 \title{Bootstrap colour distance confidence intervals}
 \usage{
-bootcoldist(vismodeldata, by, boot.n = 1000, alpha = 0.95,
-  cores = getOption("mc.cores", 2L), ...)
+bootcoldist(vismodeldata, by, boot.n = 1000, alpha = 0.95, cores = NULL, ...)
 }
 \arguments{
-\item{vismodeldata}{(required) quantum catch color data.
-Can be the result from \code{vismodel}, or \code{colspace}. Data may also be
+\item{vismodeldata}{(required) quantum catch colour data.
+Can be the result from \code{\link[=vismodel]{vismodel()}}, or \code{\link[=colspace]{colspace()}}. Data may also be
 independently calculated quantum catches, in the form of a data frame with
 columns representing photoreceptors.}
 
-\item{by}{(required) a vector containing indicating the group to which each row from
+\item{by}{(required) a numeric or character vector indicating the group to which each row from
 the object belongs to.}
 
 \item{boot.n}{number of bootstrap replicates (defaults to 1000)}
 
 \item{alpha}{the confidence level for the confidence intervals (defaults to 0.95)}
 
-\item{cores}{number of cores to be used in parallel processing. If \code{1}, parallel
-computing will not be used. Defaults to \code{getOption("mc.cores", 2L)}}
+\item{cores}{deprecated. See \code{\link[future:plan]{future::plan()}} for more details on how to
+customise your parallelisation strategy.}
 
-\item{...}{other arguments to be passed to \code{\link{coldist}}. Must at minimum
-include \code{n} and \code{weber}. See \code{\link{coldist}} for details.}
+\item{...}{other arguments to be passed to \code{\link[=coldist]{coldist()}}. Must at minimum
+include \code{n} and \code{weber}. See \code{\link[=coldist]{coldist()}} for details.}
 }
 \value{
 a matrix including the empirical mean and bootstrapped
- confidence limits for dS (and dL if \code{achro = TRUE}).
+confidence limits for dS (and dL if \code{achro = TRUE}).
 }
 \description{
 Uses a bootstrap procedure to generate confidence intervals
- for the mean colour distance between two or more samples of colours
+for the mean colour distance between two or more samples of colours
+}
+\details{
+You can customise the type of parallel processing used by this function with
+the \code{\link[future:plan]{future::plan()}} function. This works on all operating systems, as well
+as high performance computing (HPC) environment. Similarly, you can customise
+the way progress is shown with the \code{\link[progressr:handlers]{progressr::handlers()}} functions
+(progress bar, acoustic feedback, nothing, etc.)
 }
 \examples{
 \dontrun{
- data(sicalis)
- vm <- vismodel(sicalis, achro='bt.dc')
- gr <- gsub("ind..", "", rownames(vm))
- bootcoldist(vm, gr, n = c(1, 2, 2, 4), weber = 0.1, weber.achro = 0.1, cores = 1)
- }
+data(sicalis)
+vm <- vismodel(sicalis, achromatic = "bt.dc")
+gr <- gsub("ind..", "", rownames(vm))
+bootcoldist(vm, by = gr, n = c(1, 2, 2, 4), weber = 0.1, weber.achro = 0.1, cores = 1)
+}
 
 }
 \references{
 Maia, R., White, T. E., (2018) Comparing colors using visual models.
- Behavioral Ecology, ary017 doi: 10.1093/beheco/ary017.
+Behavioral Ecology, ary017 \doi{10.1093/beheco/ary017}
 }

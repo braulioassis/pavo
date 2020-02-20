@@ -1,77 +1,63 @@
 #' Interactive plot of a tetrahedral colourspace
 #'
-#' Produces an interactive 3D plot of a tetrahedral
-#' colorspace using OpenGL capabilities.
+#' Produces an interactive 3D plot of a tetrahedral colourspace using OpenGL
+#'  capabilities.
 #'
-# #' @import rgl
-# #' @importFrom rgl spheres3d rgl.postscript rgl.snapshot rgl.material
-#'
-#' @param tcsdata (required) a data frame, possibly a result from the \code{colspace}
-#' function, containing values for the 'x', 'y' and 'z' coordinates as columns (labeled as such)
+#' @inheritParams tetraplot
+#' @inheritParams triplot
 #' @param size size of the points in the plot (defaults to 0.02)
-#' @param col color of the points in the plot (defaults to black)
-#' @param alpha transparency of points (or volume fill in \code{tcsvol})
+#' @param col colour of the points in the plot (defaults to black)
+#' @param alpha transparency of points (or volume fill in [tcsvol()])
 #' @param vertexsize size of the points at the vertices
-#' @param achro plot a point at the origin? (defaults to \code{TRUE})
-#' @param achrosize size of the point in the achromatic centre
-#' @param achrocol color of the point in the achromatic centre
 #' @param lwd,lcol graphical parameters for the edges of the tetrahedron.
-#' @param new should a new 3D plot be called (defaults to \code{FALSE})?
-#' @param hspin if \code{TRUE}, the graphic will spin horizontally (around the 'z' axis)(defaults to \code{FALSE})
-#' @param vspin if \code{TRUE}, the graphic will spin vertically (around the 'x' axis)(defaults to \code{FALSE})
-#' @param floor if \code{TRUE}, a reference xy plane is plotted under the tetrahedron (defaults to \code{TRUE})
-#' @param grid if \code{TRUE}, connects the polygon outlining the volume occupied by points (defaults to \code{TRUE})
-#' @param grid.alpha transparency of the volume polygon grid lines
-#' @param fill if \code{TRUE}, fills the volume occupied by points (WARNING: transparency
-#' is not saved properly if exported using \code{rgl.postscript})(defaults to \code{TRUE}).
+#' @param new should a new 3D plot be called (defaults to `FALSE`)?
+#' @param hspin if `TRUE`, the graphic will spin horizontally (around the 'z' axis)(defaults to `FALSE`)
+#' @param vspin if `TRUE`, the graphic will spin vertically (around the 'x' axis)(defaults to `FALSE`)
+#' @param floor if `TRUE`, a reference xy plane is plotted under the tetrahedron (defaults to `TRUE`)
 #'
-#' @return \code{tcsplot} creates a 3D plot using functions of the package \code{rgl},
+#' @return [tcsplot()] creates a 3D plot using functions of the package `rgl`,
 #' based on openGL capabilities. Plot is interactive and can be manipulated with the mouse
 #' (left button: rotate along 'z' axis; right button: rotate along 'x' axis;
-#' third button: zoom). \code{tcsvol} creates polygon based on points, determining the volume
-#' occupied by them in the colorspace. \code{tcspoints} adds points to the plot. Points are
-#' currently plotted only as spheres to maintain export capabilities.
+#' third button: zoom).
 #'
-#' @examples \dontrun{
+#' @examples
+#' \dontrun{
 #' # For plotting
 #' data(sicalis)
-#' vis.sicalis <- vismodel(sicalis, visual = 'avg.uv')
-#' tcs.sicalis <- colspace(vis.sicalis, space = 'tcs')
+#' vis.sicalis <- vismodel(sicalis, visual = "avg.uv")
+#' tcs.sicalis <- colspace(vis.sicalis, space = "tcs")
 #' tcsplot(tcs.sicalis, size = 0.005)
-#' rgl.postscript('testplot.pdf',fmt='pdf')
-#' rgl.snapshot('testplot.png')
+#' rgl::rgl.postscript("testplot.pdf", fmt = "pdf")
+#' rgl::rgl.snapshot("testplot.png")
 #'
 #' # For adding points
-#' patch <- rep(c('C', 'T', 'B'), 7)
-#' tcs.crown <- subset(tcs.sicalis, 'C')
-#' tcs.breast <- subset(tcs.sicalis, 'B')
-#' tcsplot(tcs.crown, col ='blue')
-#' tcspoints(tcs.breast, col ='red')
+#' patch <- rep(c("C", "T", "B"), 7)
+#' tcs.crown <- subset(tcs.sicalis, "C")
+#' tcs.breast <- subset(tcs.sicalis, "B")
+#' tcsplot(tcs.crown, col = "blue")
+#' tcspoints(tcs.breast, col = "red")
 #'
 #' # For plotting convex hull
-#' tcsplot(tcs.sicalis, col = 'blue', size = 0.005)
+#' tcsplot(tcs.sicalis, col = "blue", size = 0.005)
 #' tcsvol(tcs.sicalis)
 #' }
 #'
-#' @seealso \code{\link[rgl]{spheres3d}},\code{\link[rgl]{rgl.postscript}},
-#' \code{\link[rgl]{rgl.snapshot}},\code{\link[rgl]{rgl.material}}
+#' @seealso [rgl::spheres3d()],[rgl::rgl.postscript()],
+#' [rgl::rgl.snapshot()],[rgl::rgl.material()]
 #'
 #' @author Rafael Maia \email{rm72@@zips.uakron.edu}
 #'
 #' @export
 #'
-#' @references Stoddard, M. C., & Prum, R. O. (2008). Evolution of avian plumage
-#'  color in a tetrahedral color space: A phylogenetic analysis of new world buntings.
-#'  The American Naturalist, 171(6), 755-776.
-#' @references Endler, J. A., & Mielke, P. (2005). Comparing entire colour patterns
-#'  as birds see them. Biological Journal Of The Linnean Society, 86(4), 405-431.
+#' @inherit tcspace references
+
 
 # ToDo: Add option to not plot tetrahedron
 
 tcsplot <- function(tcsdata, size = 0.02, alpha = 1, col = "black",
                     vertexsize = 0.02, achro = TRUE, achrosize = 0.01, achrocol = "grey",
                     lwd = 1, lcol = "lightgrey", new = FALSE, hspin = FALSE,
-                    vspin = FALSE, floor = TRUE, grid = TRUE, fill = TRUE) {
+                    vspin = FALSE, floor = TRUE, gamut = FALSE) {
 
   # check if rgl is installed and loaded
   if (!requireNamespace("rgl", quietly = TRUE)) {
@@ -80,15 +66,9 @@ tcsplot <- function(tcsdata, size = 0.02, alpha = 1, col = "black",
     )
   }
 
-  if (!isNamespaceLoaded("rgl")) {
-    requireNamespace("rgl")
-  }
-
   if (new) {
     rgl::open3d(FOV = 1, mouseMode = c("zAxis", "xAxis", "zoom"))
   }
-
-  # can't figure out how to change the character type
 
   ttv <- ttvertex
 
@@ -106,26 +86,12 @@ tcsplot <- function(tcsdata, size = 0.02, alpha = 1, col = "black",
     col = c(cu, cs, cm, cl)
   )
 
-  rgl::segments3d(ttv[c("xu", "xs")], ttv[c("yu", "ys")], ttv[c("zu", "zs")],
-    color = lcol, lwd = lwd
-  )
-  rgl::segments3d(ttv[c("xu", "xm")], ttv[c("yu", "ym")], ttv[c("zu", "zm")],
-    color = lcol, lwd = lwd
-  )
-  rgl::segments3d(ttv[c("xu", "xl")], ttv[c("yu", "yl")], ttv[c("zu", "zl")],
-    color = lcol, lwd = lwd
-  )
-  rgl::segments3d(ttv[c("xs", "xm")], ttv[c("ys", "ym")], ttv[c("zs", "zm")],
-    color = lcol, lwd = lwd
-  )
-  rgl::segments3d(ttv[c("xs", "xl")], ttv[c("ys", "yl")], ttv[c("zs", "zl")],
-    color = lcol, lwd = lwd
-  )
-  rgl::segments3d(ttv[c("xl", "xm")], ttv[c("yl", "ym")], ttv[c("zl", "zm")],
-    color = lcol, lwd = lwd
-  )
+  rgl::lines3d(unlist(ttv[c("xu", "xs", "xm", "xl", "xs", "xl", "xu", "xm")]),
+               unlist(ttv[c("yu", "ys", "ym", "yl", "ys", "yl", "yu", "ym")]),
+               unlist(ttv[c("zu", "zs", "zm", "zl", "zs", "zl", "zu", "zm")]),
+               color = lcol, lwd = lwd)
 
-  if (achro == TRUE) {
+  if (achro) {
     rgl::spheres3d(0, 0, 0, col = achrocol, radius = achrosize, lit = FALSE)
   }
 
@@ -143,6 +109,15 @@ tcsplot <- function(tcsdata, size = 0.02, alpha = 1, col = "black",
     indices <- c(1, 2, 3, 4)
 
     rgl::wire3d(rgl::qmesh3d(vertices, indices), lit = FALSE)
+  }
+
+  if (gamut) {
+    maxgamut <- attr(tcsdata, "data.maxgamut")
+    colnames(maxgamut) <- c("x", "y", "z")
+    attr(maxgamut, "clrsp") <- "tcs"
+    tryCatch(tcsvol(maxgamut, grid = FALSE),
+             error = function(e) warning("Max gamut cannot be plotted.",
+                                         call. = FALSE))
   }
 
   if (hspin) {

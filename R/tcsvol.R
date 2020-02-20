@@ -1,8 +1,11 @@
-#' Plot a tetrahedral color space
+#' Produces a 3D convex hull in tetrahedral colour space
 #'
-#' Produces a 3D convex hull in tetrahedral color space
+#' @param grid.alpha transparency of the volume polygon grid lines
+#' @param grid if `TRUE`, connects the polygon outlining the volume occupied by points (defaults to `TRUE`)
+#' @param fill if `TRUE`, fills the volume occupied by points (WARNING: transparency
+#' is not saved properly if exported using `rgl.postscript`)(defaults to `TRUE`).
 #'
-#' @return \code{tcsvol} creates a 3D convex hull within a \code{tcsplot} object.
+#' @return [tcsvol()] creates a 3D convex hull within a `tcsplot` object.
 #'
 #' @rdname tcsplot
 #' @export
@@ -19,28 +22,19 @@ tcsvol <- function(tcsdata, col = "black", alpha = 0.2,
     )
   }
 
-  if (!isNamespaceLoaded("rgl")) {
-    requireNamespace("rgl")
-  }
-
-  vol <- t(convhulln(tcsdata[, c("x", "y", "z")], options = "FA")$hull)
   coords <- tcsdata[, c("x", "y", "z")]
-  listvol <- split(vol, rep(1:ncol(vol), each = nrow(vol)))
-  ppairs <- do.call(rbind, lapply(listvol, function(x) t(combn(x, 2))))
+  vol <- t(convhulln(coords, options = "Tv"))
 
   if (grid) {
-    for (i in 1:nrow(ppairs)) {
-      rgl::segments3d(coords[ppairs[i, ], "x"],
-        coords[ppairs[i, ], "y"],
-        coords[ppairs[i, ], "z"],
-        color = col, alpha = grid.alpha, lwd = lwd
-      )
-    }
+    rgl::triangles3d(coords[vol, ],
+                     color = col, alpha = grid.alpha, lwd = lwd,
+                     front = "lines", back = "lines"
+    )
   }
 
   if (fill) {
-    rgl::rgl.triangles(coords[vol, 1], coords[vol, 2], coords[vol, 3],
-      alpha = alpha, color = col
+    rgl::rgl.triangles(coords[vol, ],
+                       alpha = alpha, color = col
     )
   }
 

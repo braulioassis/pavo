@@ -1,17 +1,14 @@
 ## Test environments
-* local OS X install, R 3.5.1
-* ubuntu 14.04.5 LTS (on travis-ci), R 3.5.0 ('release'), R 3.4.4 ('oldrelease') and R-devel (2018-09-18 r75325)
-* win-builder (R-devel 2018-09-18 r75325)
+* local macOS 10.15.3 install, R 3.6.2
+* ubuntu 16.04.6 (on travis-ci), R 3.6.2, R 3.5.3, R devel
+* win-builder (R 3.6.2 and devel)
+* rhub::check_for_cran()
 
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 1 note
 
-## Additional notes
-This release is being submitted to address the issues resulting in errors under R-oldrelease and platform with long doubles. We have removed the hash tests that were resulting in those errors. We have also reduced the file sizes that were returning notes in solaris.
+* checking package dependencies ... NOTE Suggests orphaned package: ‘imager’
 
-## Reverse dependencies
+`imager` is only used conditionally in one convenience function for converting between image formats used by `pavo` and `imager`, and we understand there are plans to for `imager` to be actively maintained again in the near future.
 
-I ran R CMD check on the one package that depends on pavo (photobiologyInOut). There were no errors or warnings.
-
----

@@ -2,53 +2,48 @@
 #'
 #' Produces a static 3D tetrahedral plot.
 #'
-#'
-# #' @usage plot(tcsdata, ...)
-#'
-#' @param tcsdata (required) a data frame, possibly a result from the \code{colspace}
-#' or \code{tetraspace} function, containing values for the 'x', 'y' and 'z'
-#' coordinates as columns (labeled as such).
+#' @param tcsdata (required) a data frame, possibly a result from the
+#'   [colspace()] or [tcspace()] function, containing values for the 'x', 'y'
+#'   and 'z' coordinates as columns (labeled as such).
 #' @param theta angle to rotate the plot in the xy plane (defaults to 45).
 #' @param phi angle to rotate the plot in the yz plane (defaults to 10).
-#' @param perspective logical, should perspective be forced by using point size to reflect
-#' distance from the plane of view? (defaults to FALSE)
-#' @param range, vert.range multiplier applied to \code{cex} and \code{vert.cex}, respectively,
-#' to indicate the size range variation reflecting the distance from the plane of view.
+#' @param perspective logical, should perspective be forced by using point size
+#'   to reflect distance from the plane of view? (defaults to `FALSE``)
+#' @param range, vert.range multiplier applied to `cex` and `vert.cex`,
+#'   respectively, to indicate the size range variation reflecting the distance
+#'   from the plane of view.
 #' @param r the distance of the eyepoint from the center of the plotting box.
-#' Very high values approximate an orthographic projection (defaults to 1e6).
-#' See \code{\link{persp}} for details.
-#' @param zoom zooms in (values greater than 1) or out (values between 0 and 1) from the plotting area.
-#' @param achro logical. Should the achromatic center be plotted? (defaults to \code{TRUE})
-#' @param achro.line logical. Should the achromatic line be plotted? (defaults to \code{FALSE})
-#' @param achro.col,achro.size,achro.lwd,achro.lty graphical parameters for the achromatic coordinates.
-#' @param tetrahedron logical. Should the tetrahedron be plotted? (defaults to \code{TRUE})
+#'   Very high values approximate an orthographic projection (defaults to 1e6).
+#'   See [persp()] for details.
+#' @param zoom zooms in (values greater than 1) or out (values between 0 and 1)
+#'   from the plotting area.
+#' @param achro.line logical. Should the achromatic line be plotted? (defaults
+#'   to `FALSE`)
+#' @param achro.lwd,achro.lty graphical parameters for the achromatic
+#'   coordinates.
+#' @param tetrahedron logical. Should the tetrahedron be plotted? (defaults to
+#'   `TRUE`)
 #' @param vert.cex size of the points at the vertices (defaults to 1).
 #' @param out.lwd,out.lcol graphical parameters for the tetrahedral outline.
-#' @param margin vector of four numbers specifying drawing margins (defaults to c(0, 0, 0, 0)).
-#' @param type accepts a vector of length 1 or 2 with 'p' for points and/or 'l' for lines from the point to
-#' the base of the tetrahedron.
-#' @param labels logical. Should the name of each cone be printed next to the
-#' corresponding vertex?
-#' @param view,scale.y,axis,grid deprecated arguments.
+#' @param margin vector of four numbers specifying drawing margins (defaults to
+#'   c(0, 0, 0, 0)).
+#' @param type accepts a vector of length 1 or 2 with 'p' for points and/or 'l'
+#'   for lines from the point to the base of the tetrahedron.
+
+#' @inheritParams triplot
 #'
-#' @return \code{tetraplot} creates a 3D plot.
+#' @return [tetraplot()] creates a non-interactive 3D plot.
 #'
-#' @examples \dontrun{
+#' @examples
 #'
 #' # For plotting
 #' data(sicalis)
-#' vis.sicalis <- vismodel(sicalis, visual = 'avg.uv')
-#' tcs.sicalis <- colspace(vis.sicalis, space = 'tcs')
+#' vis.sicalis <- vismodel(sicalis, visual = "avg.uv")
+#' tcs.sicalis <- colspace(vis.sicalis, space = "tcs")
 #' plot(tcs.sicalis)
-#'
-#' }
-#'
-#' @seealso \code{\link[rgl]{spheres3d}},\code{\link[rgl]{rgl.postscript}},
-#' \code{\link[rgl]{rgl.snapshot}},\code{\link[rgl]{rgl.material}}
-#'
 #' @author Rafael Maia \email{rm72@@zips.uakron.edu}
 #' @author Thomas White \email{thomas.white026@@gmail.com}
-#' @author Chad Eliason \email{cme16@zips.uakron.edu}
+#' @author Chad Eliason \email{cme16@@zips.uakron.edu}
 #'
 #' @export
 #'
@@ -59,34 +54,17 @@
 #' @importFrom plot3D perspbox
 #'
 #' @references Stoddard, M. C., & Prum, R. O. (2008). Evolution of avian plumage
-#'  color in a tetrahedral color space: A phylogenetic analysis of new world buntings.
-#'  The American Naturalist, 171(6), 755-776.
-#' @references Endler, J. A., & Mielke, P. (2005). Comparing entire colour patterns
-#'  as birds see them. Biological Journal Of The Linnean Society, 86(4), 405-431.
+#'   color in a tetrahedral color space: A phylogenetic analysis of new world
+#'   buntings. The American Naturalist, 171(6), 755-776.
+#' @references Endler, J. A., & Mielke, P. (2005). Comparing entire colour
+#'   patterns as birds see them. Biological Journal Of The Linnean Society,
+#'   86(4), 405-431.
 
 tetraplot <- function(tcsdata, theta = 45, phi = 10, perspective = FALSE,
                       range = c(1, 2), r = 1e6, zoom = 1,
                       achro = TRUE, achro.col = "grey", achro.size = 1, achro.line = FALSE, achro.lwd = 1, achro.lty = 3,
                       tetrahedron = TRUE, vert.cex = 1, vert.range = c(1, 2), out.lwd = 1, out.lcol = "darkgrey",
-                      margin = c(0, 0, 0, 0), type = "p", view, scale.y, axis, grid, vertexsize, labels = FALSE, ...) {
-
-  # check deprecated arguments view, scale.y, axis, grid
-  if (!missing(view)) {
-    stop('argument "view" is deprecated, please use "theta" and "phi" instead. see ?plot.colspace or ?tetraplot for more information.', call. = FALSE)
-  }
-  if (!missing(scale.y)) {
-    stop('argument "scale.y" is deprecated, please use "expand" instead. see ?plot.colspace or ?tetraplot for more information.', call. = FALSE)
-  }
-  if (!missing(axis)) {
-    stop('argument "axis" is deprecated. see ?plot.colspace or ?tetraplot for more information.', call. = FALSE)
-  }
-  if (!missing(grid)) {
-    stop('argument "grid" is deprecated. see ?plot.colspace or ?tetraplot for more information.', call. = FALSE)
-  }
-  if (!missing(vertexsize)) {
-    stop('argument "vertexsize" is deprecated, please use "vert.cex" instead. see ?plot.colspace or ?tetraplot for more information.', call. = FALSE)
-  }
-
+                      margin = c(0, 0, 0, 0), type = "p", labels = FALSE, gamut = FALSE, ...) {
   trange <- function(x, newmin, newmax) {
     (((x - min(x)) * (newmax - newmin)) / (max(x) - min(x))) + newmin
   }
@@ -117,7 +95,7 @@ tetraplot <- function(tcsdata, theta = 45, phi = 10, perspective = FALSE,
   )
 
   # combinations of vertices to make facets
-  sides <- verts[combn(1:4, 2), ]
+  sides <- verts[combn(seq_len(4), 2), ]
   rownames(sides) <- paste0(
     rep(
       do.call(paste0, data.frame(t(combn(c("u", "s", "m", "l"), 2)))),
@@ -126,13 +104,13 @@ tetraplot <- function(tcsdata, theta = 45, phi = 10, perspective = FALSE,
     c(".1", ".2")
   )
 
-  plims <- any(sapply(list(arg$xlim, arg$ylim, arg$zlim), is.null))
+  plims <- any(vapply(list(arg$xlim, arg$ylim, arg$zlim), is.null, logical(1)))
 
   # if no limits are given, estimate based on tetrahedron or tcsdataa limits
   if (plims) {
 
     # first check if all xyzlim are null
-    if (!all(sapply(list(arg$xlim, arg$ylim, arg$zlim), is.null))) {
+    if (!all(vapply(list(arg$xlim, arg$ylim, arg$zlim), is.null, logical(1)))) {
       stop('"xlim", "ylim" and "zlim" must either all be NULL or all be vectors of length 2', call. = FALSE)
     }
 
@@ -249,7 +227,7 @@ tetraplot <- function(tcsdata, theta = 45, phi = 10, perspective = FALSE,
 
   if (tetrahedron) {
 
-    # vertice colors
+    # vertice colours
     vcols <- setNames(
       c("darkorchid1", "cornflowerblue", "mediumseagreen", "firebrick1"),
       rownames(verts)
@@ -268,12 +246,12 @@ tetraplot <- function(tcsdata, theta = 45, phi = 10, perspective = FALSE,
 
     # sort segments by proximity
     combdist <- setNames(
-      apply(combn(dvals[c("u", "s", "m", "l")], 2), 2, sum),
+      colSums(combn(dvals[c("u", "s", "m", "l")], 2)),
       apply(combn(names(dvals[c("u", "s", "m", "l")]), 2), 2, paste0, collapse = "")
     )
 
     # get 3 most in back
-    inback <- names(sort(combdist, )[1:3])
+    inback <- names(sort(combdist, )[seq_len(3)])
 
     linback <- grepl(paste0(inback, collapse = "|"), rownames(segs))
 
@@ -422,7 +400,16 @@ tetraplot <- function(tcsdata, theta = 45, phi = 10, perspective = FALSE,
     }
   }
 
-
   # Save plot info
   assign("last_plot.tetra", M, envir = .PlotTetraEnv)
+
+  if (gamut) {
+    maxgamut <- attr(tcsdata, "data.maxgamut")
+    colnames(maxgamut) <- c("x", "y", "z")
+    attr(maxgamut, "clrsp") <- "tcs"
+    tryCatch(vol(maxgamut, grid = FALSE),
+             error = function(e) warning("Max gamut cannot be plotted.",
+                                         call. = FALSE))
+
+  }
 }

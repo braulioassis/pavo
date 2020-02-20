@@ -3,23 +3,19 @@
 #' Calculates coordinates and colorimetric variables that represent reflectance spectra
 #' in the color opponent coding model of hymenopteran vision.
 #'
-#' @param vismodeldata (required) quantum catch color data. Can be either the result
-#'  from \code{\link{vismodel}} or independently calculated data (in the form of a data frame
-#'  with three columns named 's', 'm', 'l', representing a trichromatic viewer).
+#' @inheritParams trispace
 #'
-#' @return A data frame of class \code{colspace} consisting of the following columns:
-#' @return \code{s}, \code{m}, \code{l}: the quantum catch data used to calculate
-#'  the remaining variables.
-#' @return \code{x}, \code{y}: coordinates for the points in coc space
-#' @return \code{r.vec}: the r vector (saturation, distance from the center using
-#'  a city-block metric).
+#' @return A data frame of class [`colspace`] consisting of the following columns:
+#' * `s`, `m`, `l`: the quantum catch data used to calculate the remaining
+#' variables.
+#' * `x`, `y`: coordinates for the points in coc space
+#' * `r.vec`: the r vector (saturation, distance from the center using a
+#' city-block metric).
 #'
-#' @examples \dontrun{
+#' @examples
 #' data(flowers)
-#' vis.flowers <- vismodel(flowers, visual = 'apis', qcatch = 'Ei', relative = FALSE, vonkries = TRUE)
-#' coc.flowers <- colspace(vis.flowers, space = 'coc')
-#' }
-#'
+#' vis.flowers <- vismodel(flowers, visual = "apis", qcatch = "Ei", relative = FALSE, vonkries = TRUE)
+#' coc.flowers <- colspace(vis.flowers, space = "coc")
 #' @author Thomas White \email{thomas.white026@@gmail.com}
 #'
 #' @export
@@ -33,7 +29,7 @@ coc <- function(vismodeldata) {
   dat <- vismodeldata
 
   # if object is vismodel:
-  if ("vismodel" %in% attr(dat, "class")) {
+  if (is.vismodel(dat)) {
 
     # check if trichromat
     if (attr(dat, "conenumb") < 3) {
@@ -58,17 +54,29 @@ coc <- function(vismodeldata) {
   }
 
   # if not, check if it has more (or less) than 3 columns
-
-  if (!("vismodel" %in% attr(dat, "class"))) {
+  else {
     if (ncol(dat) < 3) {
-      stop("Input data is not a ", dQuote("vismodel"), " object and has fewer than three columns", call. = FALSE)
+      stop("Input data is not a ", dQuote("vismodel"),
+        " object and has fewer than three columns",
+        call. = FALSE
+      )
     }
     if (ncol(dat) == 3) {
-      warning("Input data is not a ", dQuote("vismodel"), " object; treating columns as quantum catch for ", dQuote("s"), ", ", dQuote("m"), ", and ", dQuote("l"), " receptors, respectively", call. = FALSE)
+      warning("Input data is not a ", dQuote("vismodel"),
+        " object; treating columns as quantum catch for ",
+        dQuote("s"), ", ", dQuote("m"), ", and ", dQuote("l"),
+        " receptors, respectively",
+        call. = FALSE
+      )
     }
 
     if (ncol(dat) > 3) {
-      warning("Input data is not a ", dQuote("vismodel"), " object *and* has more than three columns; treating the first three columns as quantum catch for ", dQuote("s"), ", ", dQuote("m"), ", and ", dQuote("l"), " receptors, respectively", call. = FALSE)
+      warning("Input data is not a ", dQuote("vismodel"),
+        " object *and* has more than three columns; treating the first three columns as quantum catch for ",
+        dQuote("s"), ", ", dQuote("m"), ", and ", dQuote("l"),
+        " receptors, respectively",
+        call. = FALSE
+      )
     }
 
     dat <- dat[, 1:3]
@@ -84,7 +92,10 @@ coc <- function(vismodeldata) {
     m <- dat[, "m"]
     l <- dat[, "l"]
   } else {
-    warning("Could not find columns named ", dQuote("s"), ", ", dQuote("m"), ", and ", dQuote("l"), ", using first three columns instead.", call. = FALSE)
+    warning("Could not find columns named ", dQuote("s"), ", ", dQuote("m"), ", and ",
+      dQuote("l"), ", using first three columns instead.",
+      call. = FALSE
+    )
     s <- dat[, 1]
     m <- dat[, 2]
     l <- dat[, 3]
@@ -98,9 +109,7 @@ coc <- function(vismodeldata) {
   r.vec <- abs(x) + abs(y) # city-block from origin
   # h.theta <- atan2(y, x)
 
-  res.p <- data.frame(s, m, l, x, y, r.vec, row.names = rownames(dat))
-
-  res <- res.p
+  res <- data.frame(s, m, l, x, y, r.vec, row.names = rownames(dat))
 
   class(res) <- c("colspace", "data.frame")
 

@@ -4,110 +4,125 @@
 \alias{adjacent}
 \title{Run an adjacency and boundary strength analysis}
 \usage{
-adjacent(classimg, xpts = 100, xscale = NULL, bkgID = NULL,
-  polygon = NULL, exclude = c("none", "background", "object"),
-  coldists = NULL, hsl = NULL, cores = getOption("mc.cores", 2L))
+adjacent(
+  classimg,
+  xpts = NULL,
+  xscale = NULL,
+  bkgID = NULL,
+  polygon = NULL,
+  exclude = c("none", "background", "object"),
+  coldists = NULL,
+  hsl = NULL,
+  cores = NULL
+)
 }
 \arguments{
-\item{classimg}{(required) an xyz image matrix, or list of matrices, in which
-x and y correspond to pixel coordinates, and z is a numeric code specifying
-a colour-class. Preferably the result of \code{\link{classify}}.}
+\item{classimg}{(required) an xyz matrix, or list of matrices, in which
+x and y correspond to spatial (e.g. pixel) coordinates, and z is a numeric code
+specifying a colour-class. Preferably the result of \code{\link[=classify]{classify()}}, or constructed
+from grid-sampled spectra that have been visually modelled and clustered (as per Endler 2012).}
 
-\item{xpts}{(required) an integer specifying the number of sample points along the x axis,
-from which the evenly-spaced sampling grid is constructed. Defaults to 100, though
-this should be carefully considered.}
+\item{xpts}{an integer specifying the number of sample points along the x axis,
+from which the evenly-spaced sampling grid is constructed (if required). Defaults
+to the smallest dimension of \code{classimg}, though this should be carefully considered.}
 
 \item{xscale}{(required) an integer specifying the true length of the x-axis,
 in preferred units. Not required, and ignored, only if image scales have been set via
-\code{\link{procimg}}.}
+\code{\link[=procimg]{procimg()}}.}
 
 \item{bkgID}{an integer or vector specifying the colour-class ID number(s) of
 pertaining to the background alone, for relatively homogeneous and uniquely-identified
 backgrounds (e.g. the matte background of pinned specimens). Examine the attributes of, or
-call \code{summary} on, the result of \code{\link{classify}} to visualise the RGB
-values corresponding to colour-class ID numbers. Ignored if the focal object
-and background has been identified using \code{\link{procimg}}.}
+call \code{summary} on, the result of \code{\link[=classify]{classify()}} to visualise the RGB
+values corresponding to colour-class ID numbers for classified images. Ignored
+if the focal object and background has been identified using \code{\link[=procimg]{procimg()}}.}
 
 \item{polygon}{a data.frame of x-y coordinates delineating a closed polygon that
 separates the focal object from the background. Not required, and ignored, if the
-focal object outline is specified using \code{\link{procimg}}.}
+focal object outline is specified using \code{\link[=procimg]{procimg()}}.}
 
-\item{exclude}{the portion of the image to be excluded from the analysis, if any.
+\item{exclude}{the portion of the scene to be excluded from the analysis, if any.
 \itemize{
 \item \code{'none'}: default
 \item \code{'background'}: exclude everything \emph{outside} the closed polygon specified
-using \code{\link{procimg}}, or the argument \code{polygon}. Alternatively, if
+using \code{\link[=procimg]{procimg()}}, or the argument \code{polygon}. Alternatively, if
 the background is relatively homogeneous the colour-class ID(s) uniquely corresponding
 to the background can be specified via \code{bkgID}, and subsequently excluded.
 \item \code{'object'}: exclude everything \emph{inside} the closed polygon specified
-using \code{\link{procimg}}, or the argument \code{polygon}.
+using \code{\link[=procimg]{procimg()}}, or the argument \code{polygon}.
 }}
 
-\item{coldists}{A data.frame specifying the visually-modelled chromatic (dS)
+\item{coldists}{a data.frame specifying the visually-modelled chromatic (dS)
 and/or achromatic (dL) distances between colour-categories. The first two columns
-should be named 'c1' and 'c2', and specify all possible combinations of numeric 
+should be named 'c1' and 'c2', and specify all possible combinations of numeric
 colour-class ID's (viewable by calling \code{summary(image, plot = TRUE)} on
 a colour classified image), with the remaining columns named dS (for chromatic distances)
-and/or dL (for achromatic distances). See \code{\link{vismodel}} and \code{\link{colspace}}
+and/or dL (for achromatic distances). See \code{\link[=vismodel]{vismodel()}} and \code{\link[=colspace]{colspace()}}
 for visual modelling with spectral data.}
 
 \item{hsl}{data.frame specifying the hue, saturation, and luminance of color patch elements,
-as might be estimated via \code{\link{vismodel}} and \code{\link{colspace}}. The first
+as might be estimated via \code{\link[=vismodel]{vismodel()}} and \code{\link[=colspace]{colspace()}}. The first
 column, named 'patch', should contain numeric color category IDs, with the remaining
 columns specifying one or more of 'hue' (angle, in radians), 'sat', and/or 'lum'.}
 
-\item{cores}{number of cores to be used in parallel processing. If \code{1}, parallel
-computing will not be used. Defaults to \code{getOption("mc.cores", 2L)}. Not
-available on Windows.}
+\item{cores}{deprecated. See \code{\link[future:plan]{future::plan()}} for more details on how to
+customise your parallelisation strategy.}
 }
 \value{
 a data frame of summary variables:
 \itemize{
-  \item \code{'k'}: The number of user-specified colour and/or luminance classes.
-  \item \code{'N'}: The grand total (sum of diagonal and off-diagonal) transitions.
-  \item \code{'n_off'}: The total off-diagonal transitions.
-  \item \code{'p_i'}: The overall frequency of colour class \emph{i}.
-  \item \code{'q_i_j'}: The frequency of transitions between \emph{all} colour classes
-   \emph{i} and \emph{j}, such that \code{sum(q_i_j) = 1}.
-  \item \code{'t_i_j'}: The frequency of off-diagonal (i.e. class-change
-    transitions) transitions \emph{i} and \emph{j}, such that \code{sum(t_i_j) = 1}.
-  \item \code{'m'}: The overall transition density (mean transitions),
-    in units specified in the argument \code{xscale}.
-  \item \code{'m_r'}: The row-wise transition density (mean row transitions),
-    in user-specified units.
-  \item \code{'m_c'}: The column-wise transition density (mean column transitions),
-    in user-specified units.
-  \item \code{'A'}: The transition aspect ratio (< 1 = wide, > 1 = tall).
-  \item \code{'Sc'}: Simpson colour class diversity, \code{Sc = 1/(sum(p_i^2))}. If 
-  all colour and luminance classes are equal in relative area, then \code{Sc = k}.  
-  \item \code{'St'}: Simpson transition diversity, \code{St = 1/sum(t_i_j^2)}.
-  \item \code{'Jc'}: Simpson colour class diversity relative to its achievable maximum.
-  \code{Jc = Sc/k}.
-  \item \code{'Jt'}: Simpson transition diversity relative to its achievable maximum.
-  \code{Jt = St/(k*(k-1)/2)}.
-  \item \code{'B'}: The animal/background transition ratio, or the ratio of class-change 
-  transitions entirely within the focal object and those involving the object and background, 
-  \code{B = sum(O_a_a / O_a_b)}.
-  \item \code{'Rt'}: Ratio of animal-animal and animal-background transition diversities,
-  \code{Rt = St_a_a / St_a_b}.
-  \item \code{'Rab'}: Ratio of animal-animal and background-background transition diversities,
-  \code{Rt = St_a_a / St_b_b}.
-  \item \code{'m_dS', 's_dS', 'cv_dS'}: weighted mean, sd, and coefficient of 
-  variation of the chromatic boundary strength.
-  \item \code{'m_dL', 's_dL', 'cv_dL'}: weighted mean, sd, and coefficient of 
-  variation of the achromatic boundary strength.
-  \item \code{'m_hue', 's_hue', 'var_hue'}: circular mean, sd, and variance of 
-  overall pattern hue (in radians).
-  \item \code{'m_sat', 's_sat', 'cv_sat'}: weighted mean, sd, and coefficient 
-  variation of overall pattern saturation.
-  \item \code{'m_lum', 's_lum', 'cv_lum'}: weighted mean, sd, and coefficient 
-  variation of overall pattern luminance.
-  }
+\item \code{'k'}: The number of user-specified colour and/or luminance classes.
+\item \code{'N'}: The grand total (sum of diagonal and off-diagonal) transitions.
+\item \code{'n_off'}: The total off-diagonal transitions.
+\item \code{'p_i'}: The overall frequency of colour class \emph{i}.
+\item \code{'q_i_j'}: The frequency of transitions between \emph{all} colour classes
+\emph{i} and \emph{j}, such that \code{sum(q_i_j) = 1}.
+\item \code{'t_i_j'}: The frequency of off-diagonal (i.e. class-change
+transitions) transitions \emph{i} and \emph{j}, such that \code{sum(t_i_j) = 1}.
+\item \code{'m'}: The overall transition density (mean transitions),
+in units specified in the argument \code{xscale}.
+\item \code{'m_r'}: The row-wise transition density (mean row transitions),
+in user-specified units.
+\item \code{'m_c'}: The column-wise transition density (mean column transitions),
+in user-specified units.
+\item \code{'A'}: The transition aspect ratio (< 1 = wide, > 1 = tall).
+\item \code{'Sc'}: Simpson colour class diversity, \code{Sc = 1/(sum(p_i^2))}. If
+all colour and luminance classes are equal in relative area, then \code{Sc = k}.
+\item \code{'St'}: Simpson transition diversity, \code{St = 1/sum(t_i_j^2)}.
+\item \code{'Jc'}: Simpson colour class diversity relative to its achievable maximum.
+\code{Jc = Sc/k}.
+\item \code{'Jt'}: Simpson transition diversity relative to its achievable maximum.
+\code{Jt = St/(k*(k-1)/2)}.
+\item \code{'B'}: The animal/background transition ratio, or the ratio of class-change
+transitions entirely within the focal object and those involving the object and background,
+\code{B = sum(O_a_a / O_a_b)}.
+\item \code{'Rt'}: Ratio of animal-animal and animal-background transition diversities,
+\code{Rt = St_a_a / St_a_b}.
+\item \code{'Rab'}: Ratio of animal-animal and background-background transition diversities,
+\code{Rt = St_a_a / St_b_b}.
+\item \verb{'m_dS', 's_dS', 'cv_dS'}: weighted mean, sd, and coefficient of
+variation of the chromatic boundary strength.
+\item \verb{'m_dL', 's_dL', 'cv_dL'}: weighted mean, sd, and coefficient of
+variation of the achromatic boundary strength.
+\item \verb{'m_hue', 's_hue', 'var_hue'}: circular mean, sd, and variance of
+overall pattern hue (in radians).
+\item \verb{'m_sat', 's_sat', 'cv_sat'}: weighted mean, sd, and coefficient
+variation of overall pattern saturation.
+\item \verb{'m_lum', 's_lum', 'cv_lum'}: weighted mean, sd, and coefficient
+variation of overall pattern luminance.
+}
 }
 \description{
 Calculate summary variables from the adjacency (Endler 2012) and
 boundary-strength (Endler et al. 2018) analyses, along with overall pattern
 contrast (Endler & Mielke 2005).
+}
+\details{
+You can customise the type of parallel processing used by this function with
+the \code{\link[future:plan]{future::plan()}} function. This works on all operating systems, as well
+as high performance computing (HPC) environment. Similarly, you can customise
+the way progress is shown with the \code{\link[progressr:handlers]{progressr::handlers()}} functions
+(progress bar, acoustic feedback, nothing, etc.)
 }
 \examples{
 \dontrun{
@@ -115,44 +130,52 @@ contrast (Endler & Mielke 2005).
 set.seed(153)
 
 # Single image
-papilio <- getimg(system.file("testdata/images/papilio.png", package = 'pavo'))
+papilio <- getimg(system.file("testdata/images/papilio.png", package = "pavo"))
 papilio_class <- classify(papilio, kcols = 4)
-papilio_adj <- adjacent(papilio_class, xpts = 150, xscale = 100)
+papilio_adj <- adjacent(papilio_class, xscale = 100)
 
 # Single image, with (fake) color distances and hsl values
 # Fake color distances
-distances <- data.frame(c1 = c(1, 1, 1, 2, 2, 3),
-                        c2 = c(2, 3, 4, 3, 4, 4),
-                        dS = c(5.3, 3.5, 5.7, 2.9, 6.1, 3.2),
-                        dL = c(5.5, 6.6, 3.3, 2.2, 4.4, 6.6))
+distances <- data.frame(
+  c1 = c(1, 1, 1, 2, 2, 3),
+  c2 = c(2, 3, 4, 3, 4, 4),
+  dS = c(5.3, 3.5, 5.7, 2.9, 6.1, 3.2),
+  dL = c(5.5, 6.6, 3.3, 2.2, 4.4, 6.6)
+)
 
 # Fake hue, saturation, luminance values
-hsl_vals <- data.frame(patch = 1:4,
-                       hue = c(1.5, 2.2, 1.0, 0.5),
-                       lum = c(10, 5, 7, 3),
-                       sat = c(3.5, 1.1, 6.3, 1.3))
+hsl_vals <- data.frame(
+  patch = seq_len(4),
+  hue = c(1.5, 2.2, 1.0, 0.5),
+  lum = c(10, 5, 7, 3),
+  sat = c(3.5, 1.1, 6.3, 1.3)
+)
 
 # Full analysis, including the white background's ID
-papilio_adj <- adjacent(papilio_class, xpts = 150, xscale = 100, bkgID = 1,
-                        coldists = distances, hsl = hsl_vals)
+papilio_adj <- adjacent(papilio_class,
+  xscale = 100, bkgID = 1,
+  coldists = distances, hsl = hsl_vals
+)
 
 # Multiple images
-snakes <- getimg(system.file("testdata/images/snakes", package = 'pavo'))
+snakes <- getimg(system.file("testdata/images/snakes", package = "pavo"))
 snakes_class <- classify(snakes, kcols = 3)
 snakes_adj <- adjacent(snakes_class, xpts = 120, xscale = c(50, 55))
 }
-
 }
 \references{
 Endler, J. A. (2012). A framework for analysing colour pattern geometry:
-adjacent colours. Biological Journal Of The Linnean Society, 86(4), 405-431.
+adjacent colours. Biological Journal Of The Linnean Society, 107(2), 233-253.
 
-Endler, J. A., Cole G., Kranz A.  (2018). Boundary Strength Analysis:
+Endler, J. A., Cole G., Kranz A. (2018). Boundary Strength Analysis:
 Combining color pattern geometry and coloured patch visual properties for use in predicting behaviour
-and fitness. bioRxiv.
+and fitness. Methods in Ecology and Evolution, 9(12), 2334-2348.
 
 Endler, J. A., & Mielke, P. (2005). Comparing entire colour patterns
- as birds see them. Biological Journal Of The Linnean Society, 86(4), 405-431.
+as birds see them. Biological Journal Of The Linnean Society, 86(4), 405-431.
+}
+\seealso{
+\code{\link[=classify]{classify()}}, \code{\link[=summary.rimg]{summary.rimg()}}, \code{\link[=procimg]{procimg()}}
 }
 \author{
 Thomas E. White \email{thomas.white026@gmail.com}

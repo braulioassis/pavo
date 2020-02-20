@@ -4,27 +4,31 @@
 \name{pavo-package}
 \alias{pavo}
 \alias{pavo-package}
-\title{pavo: Perceptual Analysis, Visualization and Organization of Spectral Color
-    Data in R}
+\title{pavo: Perceptual Analysis, Visualization and Organization of
+    Spectral Colour Data}
 \description{
-A cohesive framework for parsing, analyzing and organizing color from spectral data.
+A cohesive framework for parsing, analyzing and
+    organizing colour from spectral data.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{http://rafaelmaia.net/pavo/}
+  \item \url{http://pavo.colrverse.com}
+  \item \url{https://github.com/rmaia/pavo/}
+  \item Report bugs at \url{https://github.com/rmaia/pavo/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Rafael Maia \email{rm72@zips.uakron.edu}
+\strong{Maintainer}: Rafael Maia \email{thomas.white026@gmail.com} (\href{https://orcid.org/0000-0002-7563-9795}{ORCID})
 
 Authors:
 \itemize{
-  \item Thomas White \email{thomas.white026@gmail.com}
-  \item Hugo Gruson \email{hugo.gruson+R@normalesup.org}
+  \item Thomas White \email{thomas.white026@gmail.com} (\href{https://orcid.org/0000-0002-3976-1734}{ORCID})
+  \item Hugo Gruson \email{hugo.gruson+R@normalesup.org} (\href{https://orcid.org/0000-0002-4094-1476}{ORCID})
+  \item John Endler \email{john.endler@deakin.edu.au}
   \item Chad Eliason \email{cme16@zips.uakron.edu}
-  \item Pierre-Paul Bitton \email{bittonp@uwindsor.ca}
+  \item Pierre-Paul Bitton \email{bittonp@uwindsor.ca} (\href{https://orcid.org/0000-0001-5984-2331}{ORCID})
 }
 
 }

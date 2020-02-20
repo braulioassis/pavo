@@ -1,51 +1,50 @@
-#' Colorspace data summary
+#' Colourspace data summary
 #'
-#' Returns the attributes of \code{colspace} objects.
+#' Returns the attributes of `colspace` objects.
 #'
-#' @import geometry
-#'
-#' @param object (required) a \code{colspace} object.
-#' @param by when the input is in \code{tcs} colorspace, \code{by} is either
-#'  a single value specifying the range of color points for which
-#'  summary tetrahedral-colorspace variables should be calculated (for example, \code{by} = 3
-#'  indicates summary will be calculated for groups of 3 consecutive color points (rows)
-#'  in the quantum catch color data frame) or a vector containing identifications for
-#'  the rows in the quantum catch color data frame (in which case summaries will be
-#'  calculated for each group of points sharing the same identification). If \code{by}
-#'  is left blank, the summary statistics are calculated across all color points in the
+#' @param object (required) a `colspace` object.
+#' @param by when the input is in `tcs` colourspace, `by` is either
+#'  a single value specifying the range of colour points for which
+#'  summary tetrahedral-colourspace variables should be calculated (for example, `by` = 3
+#'  indicates summary will be calculated for groups of 3 consecutive colour points (rows)
+#'  in the quantum catch colour data frame) or a vector containing identifications for
+#'  the rows in the quantum catch colour data frame (in which case summaries will be
+#'  calculated for each group of points sharing the same identification). If `by`
+#'  is left blank, the summary statistics are calculated across all colour points in the
 #'  data.
 #' @param ... class consistency (ignored).
 #'
 #' @return returns all attributes of the data as mapped to the selected colourspace, including
 #' options specified when calculating the visual model. Also return the default
-#' \code{data.frame} summary, except when the object is the result of \code{tcs},
+#' `data.frame` summary, except when the object is the result of [tcspace()],
 #' in which case the following variables are output instead:
-#' @return \code{centroid.u, .s, .m, .l} the centroids of \code{usml} coordinates of points.
-#' @return \code{c.vol} the total volume occupied by the points.
-#' @return \code{rel.c.vol} volume occupied by the points relative to the tetrahedron volume.
-#' @return \code{colspan.m} the mean hue span.
-#' @return \code{colspan.v} the variance in hue span.
-#' @return \code{huedisp.m} the mean hue disparity.
-#' @return \code{huedisp.v} the variance in hue disparity.
-#' @return \code{mean.ra} mean saturation.
-#' @return \code{max.ra} maximum saturation achieved by the group of points.
+#' - `centroid.u, .s, .m, .l` the centroids of `usml` coordinates of points.
+#' - `c.vol` the total volume occupied by the points.
+#' - `rel.c.vol` volume occupied by the points relative to the tetrahedron volume.
+#' - `colspan.m` the mean hue span.
+#' - `colspan.v` the variance in hue span.
+#' - `huedisp.m` the mean hue disparity.
+#' - `huedisp.v` the variance in hue disparity.
+#' - `mean.ra` mean saturation.
+#' - `max.ra` maximum saturation achieved by the group of points.
 #'
 #' @export
 #'
-#' @examples \dontrun{
+#' @examples
 #' # Colour hexagon
 #' data(flowers)
-#' vis.flowers <- vismodel(flowers, visual = 'apis', qcatch = 'Ei', relative = FALSE,
-#'                         vonkries = TRUE, bkg = 'green')
+#' vis.flowers <- vismodel(flowers,
+#'   visual = "apis", qcatch = "Ei", relative = FALSE,
+#'   vonkries = TRUE, bkg = "green"
+#' )
 #' flowers.hex <- hexagon(vis.flowers)
 #' summary(flowers.hex)
 #'
 #' # Tetrahedral model
 #' data(sicalis)
-#' vis.sicalis <- vismodel(sicalis, visual='avg.uv')
+#' vis.sicalis <- vismodel(sicalis, visual = "avg.uv")
 #' csp.sicalis <- colspace(vis.sicalis)
-#' summary(csp.sicalis, by = rep(c('C', 'T', 'B'), 7))}
-#'
+#' summary(csp.sicalis, by = rep(c("C", "T", "B"), 7))
 #' @author Rafael Maia \email{rm72@@zips.uakron.edu}
 #'
 #' @references Stoddard, M. C., & Prum, R. O. (2008). Evolution of avian plumage
@@ -55,9 +54,26 @@
 #'  as birds see them. Biological Journal Of The Linnean Society, 86(4), 405-431.
 
 summary.colspace <- function(object, by = NULL, ...) {
+  chkDots(...)
+
   if (is.null(attr(object, "clrsp"))) {
     message("Cannot return full colspace summary on subset data")
     return(summary(as.data.frame(object)))
+  }
+
+
+  if (!is.null(attr(object, "data.maxgamut"))) {
+    maxgamut <- attr(object, "data.maxgamut")
+    if (attr(object, "clrsp") == "dispace") {
+      maxvol <- max(maxgamut) - min(maxgamut)
+    } else {
+      maxvol <- tryCatch(
+        convhulln(attr(object, "data.maxgamut"), "FA")$vol,
+        error = function(e) NA
+      )
+    }
+  } else {
+    maxvol <- NA
   }
 
   cat(
@@ -68,16 +84,22 @@ summary.colspace <- function(object, by = NULL, ...) {
     "* Visual system, achromatic:", attr(object, "visualsystem.achromatic"), "\n",
     "* Illuminant:", attr(object, "illuminant"), "\n",
     "* Background:", attr(object, "background"), "\n",
-    "* Relative:", attr(object, "relative"), "\n", "\n"
+    "* Relative:", attr(object, "relative"), "\n",
+    "* Max possible chromatic volume:", maxvol, "\n"
   )
 
-  if (attr(object, "clrsp") != "tcs") summary.data.frame(object)
+
+  cat("\n")
+
+  if (attr(object, "clrsp") != "tcs") {
+    return(summary.data.frame(object))
+  }
 
   if (attr(object, "clrsp") == "tcs") {
     if (!is.null(by)) {
       if (length(by) == 1) {
         by.many <- by
-        by <- rep(1:(dim(object)[1] / by), each = by)
+        by <- rep(seq_len(dim(object)[1] / by), each = by)
         by <- factor(by,
           labels = row.names(object)[seq(1, length(row.names(object)), by = by.many)]
         )
@@ -91,7 +113,7 @@ summary.colspace <- function(object, by = NULL, ...) {
       row.names(res.c) <- "all.points"
     }
 
-    if (any(is.na(res.c$c.vol))) {
+    if (anyNA(res.c$c.vol)) {
       warning("Not enough points to calculate volume", call. = FALSE)
     }
 

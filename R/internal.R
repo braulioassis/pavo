@@ -1,21 +1,36 @@
+.onAttach <- function(libname, pkgname) {
+  packageStartupMessage("Welcome to pavo 2! Take a look at the latest features (and update your bibliography) in our recent publication: Maia R., Gruson H., Endler J. A., White T. E. (2019) pavo 2: new tools for the spectral and spatial analysis of colour in R. Methods in Ecology and Evolution, 10, 1097-1107.")
+}
+
 #####################
 # SUMMARY VARIABLES #
 #####################
 
 huedisp <- function(tcsres) {
-  combn(nrow(tcsres), 2, function(x)
-    acos((cos(tcsres[x[1], "h.phi"]) * cos(tcsres[x[2], "h.phi"]) * cos(tcsres[x[1], "h.theta"] -
-      tcsres[x[2], "h.theta"])) + (sin(tcsres[x[1], "h.phi"]) * sin(tcsres[x[2], "h.phi"]))))
+  if (nrow(tcsres) == 1) {
+    return(NA)
+  }
+  # This function can probably also be expressed with x,y,z or u,s,m,l, which
+  # might help write a more efficient code using linear algebra libs.
+  alphas <- combn(nrow(tcsres), 2, function(x) {
+    phi <- tcsres[x, "h.phi"]
+    theta <- tcsres[x, "h.theta"]
+
+    prod(cos(phi), cos(diff(theta))) + prod(sin(phi))
+  })
+  acos(alphas)
 }
 
 
+#' @importFrom geometry convhulln
 tcssum <- function(tcsres) {
   # centroid
   centroid <- colMeans(tcsres[c("u", "s", "m", "l")])
 
   # color span
-  colspan.m <- mean(dist(tcsres[, c("x", "y", "z")]))
-  colspan.v <- var(dist(tcsres[, c("x", "y", "z")]))
+  colspan <- dist(tcsres[, c("x", "y", "z")])
+  colspan.m <- mean(colspan)
+  colspan.v <- var(colspan)
 
   if (nrow(tcsres) > 3) {
     # color volume
@@ -23,7 +38,7 @@ tcssum <- function(tcsres) {
 
     # Exact formula for the volume of a regular tetrahedron inscribed in a
     # circle of radius (3/4)
-    tot.c.vol <- (3 / sqrt(6))^3 / (6 * sqrt(2))
+    tot.c.vol <- sqrt(3) / 8
 
     # relative color volume
     rel.c.vol <- c.vol / tot.c.vol
@@ -33,8 +48,9 @@ tcssum <- function(tcsres) {
   }
 
   # hue disparity
-  hdisp.m <- mean(huedisp(tcsres))
-  hdisp.v <- var(huedisp(tcsres))
+  hdisp <- huedisp(tcsres)
+  hdisp.m <- mean(hdisp)
+  hdisp.v <- var(hdisp)
 
   # summary of achieved chroma
   mean.ra <- mean(tcsres$r.achieved)

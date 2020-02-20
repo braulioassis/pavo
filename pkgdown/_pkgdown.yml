@@ -1,0 +1,96 @@
+url: http://pavo.colrverse.com
+
+home:
+  title: Perceptual Analysis, Visualization and Organization of Spectral Colour Data in R
+
+reference:
+- title: Processing and Organisation
+  desc: "Functions for importing and processing spectral data"
+  contents:
+  - '`aggspec`'
+  - '`as.rspec`'
+  - '`as.rimg`'
+  - '`is.colspace`'
+  - '`is.vismodel`'
+  - '`getspec`'
+  - '`getimg`'
+  - '`irrad2flux`'
+  - '`merge.rspec`'
+  - '`procimg`'
+  - '`procspec`'
+  - '`rimg2cimg`'
+  - '`spec2rgb`'
+  - '`subset.rspec`'
+
+- title: Visualisation
+  desc: "Functions for visualising spectral data, including the results of visual modelling"
+  contents:
+  - '`aggplot`'
+  - '`axistetra`'
+  - '`explorespec`'
+  - '`legendtetra`'
+  - '`plot.colspace`'
+  - '`plot.rimg`'
+  - '`plot.rspec`'
+  - '`plotsmooth`'
+  - '`points.colspace`'
+  - '`projplot`'
+  - '`sensdata`'
+  - '`tcsplot`'
+
+- title: Analysis
+  desc: "Functions for analysing spectral data"
+  contents:
+  - '`adjacent`'
+  - '`bootcoldist`'
+  - '`classify`'
+  - '`coldist`'
+  - '`colspace`'
+  - '`jnd2xyz`'
+  - '`jndrot`'
+  - '`peakshape`'
+  - '`sensmodel`'
+  - '`summary.colspace`'
+  - '`summary.rimg`'
+  - '`summary.rspec`'
+  - '`summary.vismodel`'
+  - '`vismodel`'
+  - '`vol`'
+  - '`voloverlap`'
+
+- title: Data
+  desc: "Included example datasets"
+  contents:
+  - '`flowers`'
+  - '`sicalis`'
+  - '`teal`'
+
+template:
+  params:
+    docsearch:
+      api_key: 1988255e7e235678bc3c7f1b86b9ecc5
+      index_name: rafaelmaia_pavo
+
+development:
+  mode: unreleased
+
+navbar:
+  title: ~
+  type: default
+  left:
+    - icon: fa-home fa-lg
+      href: index.html
+    - text: Reference
+      href: reference/index.html
+    - text: Articles
+      menu:
+      - text: Overview
+        href: articles/pavo-1-overview.html
+      - text: Importing and Processing Data
+        href: articles/pavo-2-importing_processing.html
+      - text: Analysing Data
+        href: articles/pavo-3-analysing.html
+      - text: Spectral Shape Descriptors
+        href: articles/pavo-4-spectraldesc.html
+    - text: Changelog
+      href: news/index.html

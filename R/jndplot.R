@@ -1,40 +1,40 @@
 #' Perceptually-corrected chromaticity diagrams
 #'
-#' Plot options for \code{jnd2xyz} objects.
+#' Plot options for [`jnd2xyz`] objects.
 #'
-#' @param x (required) the output from a \code{jnd2xyz} call.
-#' @param arrow If and how arrows indicating receptor vectors should be
-#' drawn. Options are \code{'relative'} (default), \code{'absolute'} or
-#' \code{'none'}. See description.
+#' @param x (required) the output from a [jnd2xyz()] call.
+#' @param arrow If and how arrows indicating receptor vectors should be drawn.
+#'   Options are `"relative"` (default), `"absolute"` or `"none"`. See
+#'   description.
 #' @param achro Logical. Should the achromatic variable be plotted as a
-#' dimension? (only available for dichromats and trichromats, defaults to \code{FALSE}).
+#'   dimension? (only available for dichromats and trichromats, defaults to
+#'   `FALSE`).
 #' @param arrow.labels Logical. Should labels be plotted for receptor arrows?
-#' (defaults to \code{TRUE})
+#'   (defaults to `TRUE`)
 #' @param arrow.col color of the arrows and labels.
 #' @param arrow.p scaling factor for arrows.
-#' @param labels.cex scaling factor for arrow labels.
-#' @param margin accepts either \code{'recommended'}, where the function will choose margin
-#' attributes, or a numerical vector of the form \code{c(bottom, left, top, right)}
-#' which gives the number of lines of margin to be specified on the four sides of the plot.
-#' (Default varies depending on plot dimensionality).
-#' @param square Logical. Should a square plotting area be used? (defaults to \code{TRUE})
-#' @param ... additional parameters to be passed to \code{\link{plot}}, \code{\link{arrows}}
-#' and \code{link{persp}} (for 3D plots).
+#' @param margin accepts either `"recommended"`, where the function will choose
+#'   margin attributes, or a numerical vector of the form `c(bottom, left, top,
+#'   right)` which gives the number of lines of margin to be specified on the
+#'   four sides of the plot. (Default varies depending on plot dimensionality).
+#' @param ... additional parameters to be passed to [plot()], [arrows()] and
+#'   [graphics::persp()] (for 3D plots).
+#' @inheritParams triplot
 #'
 #' @return Creates a plot, details of the plot depend on the input data.
-#' @note the \code{arrow} argument accepts three options:
-#' \itemize{
-#'  \item \code{'relative'}: With this option, arrows will be made relative to the data. Arrows
-#'    will be centered on the data centroid, and will have an arbitrary length of half the
-#'    average pairwise distance between points, which can be scaled with the \code{arrow.p}
-#'    argument.
-#'  \item \code{'absolute'}: With this option, arrows will be made to reflect the visual system
-#'    underlying the data. Arrows will be centered on the achromatic point in colorspace, and
-#'    will have length equal to the distance to a monochromatic point (i.e. a color that
-#'    stimulates approximately 99.9% of that receptor alone). Arrows can still be scaled using
-#'    the \code{arrow.p} argument, in which case they cannot be interpreted as described.
-#'   \item \code{'none'}: no arrows will be included.
-#' }
+#'
+#' @note the `arrow` argument accepts three options:
+#'   * `"relative"`: With this option, arrows will be made relative to the data.
+#'   Arrows will be centered on the data centroid, and will have an arbitrary
+#'   length of half the average pairwise distance between points, which can be
+#'   scaled with the `arrow.p` argument.
+#'   * `"absolute"`: With this option, arrows will be made to reflect the visual
+#'   system underlying the data. Arrows will be centered on the achromatic point
+#'   in colourspace, and will have length equal to the distance to a
+#'   monochromatic point (i.e. a colour that stimulates approximately 99.9% of
+#'   that receptor alone). Arrows can still be scaled using the `arrow.p`
+#'   argument, in which case they cannot be interpreted as described.
+#'   * `"none"`: no arrows will be included.
 #'
 #' @export
 #'
@@ -42,18 +42,16 @@
 #'
 #' @keywords internal
 #'
-#' @examples \dontrun{
+#' @examples
 #' data(flowers)
 #' vis.flowers <- vismodel(flowers)
 #' cd.flowers <- coldist(vis.flowers)
 #' propxyz <- jnd2xyz(cd.flowers)
 #' plot(propxyz)
-#' }
-#'
 #' @author Rafael Maia \email{rm72@@zips.uakron.edu}
 #'
-#' @references Pike, T.W. (2012). Preserving perceptual distances in chromaticity diagrams.
-#' Behavioral Ecology, 23, 723-728.
+#' @references Pike, T.W. (2012). Preserving perceptual distances in
+#'   chromaticity diagrams. Behavioral Ecology, 23, 723-728.
 
 
 jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
@@ -74,12 +72,12 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
   arg <- list(...)
 
   if (achro) {
-    plotdims <- as.character(round(sum(c("x", "y", "z", "lum") %in% colnames(x))))
+    plotdims <- sum(c("x", "y", "z", "lum") %in% colnames(x))
   } else {
-    plotdims <- as.character(round(sum(c("x", "y", "z") %in% colnames(x))))
+    plotdims <- sum(c("x", "y", "z") %in% colnames(x))
   }
 
-  if (plotdims == "4") {
+  if (plotdims == 4) {
     stop('cannot use "achro=TRUE" when chromatic space is three-dimensional.')
   }
 
@@ -93,7 +91,7 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
 
 
   # 1 DIMENSION
-  if (plotdims == "1") {
+  if (plotdims == 1) {
     if (!is.null(margin)) {
       if (margin == "recommended") {
         par(mar = c(5.1, 2.1, 4.1, 2.1))
@@ -103,10 +101,11 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
     }
 
     # combine data with references
-    dat <- rbind(x[, "x", drop = FALSE], attr(x, "resref")[, "x", drop = FALSE])
+    x2 <- x[, "x", drop = FALSE]
+
+    dat <- rbind(x2, attr(x, "resref")[, "x", drop = FALSE])
     attr(dat, "resref") <- attr(x, "resref")[, "x", drop = FALSE]
 
-    x2 <- x[, "x", drop = FALSE]
 
     # get arrow coordinates
 
@@ -144,8 +143,7 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
     # add arrows
     if (arrow != "none") {
       arrowarg <- arg
-      arrowarg <- arrowarg[names(as.list(args(arrows)))]
-      arrowarg <- arrowarg[!unlist(lapply(arrowarg, is.null))]
+      arrowarg <- arrowarg[names(arg) %in% names(formals(arrows))]
       arrowarg$x0 <- arrowstart
       arrowarg$x1 <- arrowpos
       arrowarg$y0 <- rep(0, 2)
@@ -156,19 +154,15 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
     }
 
     if (arrow.labels) {
-      text("S",
-        x = arrowarg$x1[1], y = 0, xpd = TRUE,
-        pos = 2, cex = labels.cex, col = arrow.col
-      )
-      text("L",
-        x = arrowarg$x1[2], y = 0, xpd = TRUE,
-        pos = 4, cex = labels.cex, col = arrow.col
+      text(c("S", "L"),
+        x = arrowarg$x1, y = 0, xpd = TRUE,
+        pos = c(2,4), cex = labels.cex, col = arrow.col
       )
     }
 
     # Add points
     pointsarg <- arg
-    pointsarg[names(as.list(args(arrows)))] <- NULL
+    pointsarg[names(formals(arrows))] <- NULL
     pointsarg$col <- arg$col
 
     pointsarg$x <- x[, "x"]
@@ -178,7 +172,7 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
   }
 
   # 2 DIMENSIONS
-  if (plotdims == "2") {
+  if (plotdims == 2) {
     if (!is.null(margin)) {
       if (margin == "recommended") {
         par(mar = c(5.1, 4.1, 4.1, 2.1))
@@ -204,8 +198,6 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
 
     if (arrow != "none") {
       # get arrow coordinates
-      arrow <- match.arg(arrow)
-
       arrowstart <- switch(arrow,
         relative = as.matrix(attr(dat, "resref")[dim(attr(dat, "resref"))[1], colstouse]),
         absolute = as.matrix(attr(dat, "resref")["jnd2xyzrrf.achro", colstouse]),
@@ -278,7 +270,7 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
 
     # Blank plot w/ segment
     plotarg <- arg
-    plotarg[names(as.list(args(arrows)))] <- NULL
+    plotarg[names(formals(arrows))] <- NULL
     plotarg$x <- 0
     plotarg$y <- 0
     plotarg$type <- "n"
@@ -305,8 +297,7 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
     # add arrows
     if (arrow != "none") {
       arrowarg <- arg
-      arrowarg <- arrowarg[names(as.list(args(arrows)))]
-      arrowarg <- arrowarg[!unlist(lapply(arrowarg, is.null))]
+      arrowarg <- arrowarg[names(arg) %in% names(formals(arrows))]
       arrowarg$x0 <- rep(arrowstart[, colstouse[1]], 3)
       arrowarg$x1 <- arrowpos[, colstouse[1]]
       arrowarg$y0 <- rep(arrowstart[, colstouse[2]], 3)
@@ -325,25 +316,14 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
           lbl <- c("S", "M", "L")
         }
 
-        text(lbl[1],
-          x = labelpos[1, colstouse[1]], y = labelpos[1, colstouse[2]], xpd = TRUE,
-          cex = labels.cex, col = arrow.col
-        )
-        text(lbl[2],
-          x = labelpos[2, colstouse[1]], y = labelpos[2, colstouse[2]], xpd = TRUE,
-          cex = labels.cex, col = arrow.col
-        )
-        text(lbl[3],
-          x = labelpos[3, colstouse[1]], y = labelpos[3, colstouse[2]], xpd = TRUE,
-          cex = labels.cex, col = arrow.col
-        )
+        text(labelpos, lbl, xpd = TRUE, cex = labels.cex, col = arrow.col)
       }
     }
 
 
     # Add points
     pointsarg <- arg
-    pointsarg[names(as.list(args(arrows)))] <- NULL
+    pointsarg[names(formals(arrows))] <- NULL
     pointsarg$col <- arg$col
 
     pointsarg$x <- x[, colstouse[1]]
@@ -354,7 +334,7 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
 
 
   # 3 DIMENSIONS
-  if (plotdims == "3") {
+  if (plotdims == 3) {
     if (!is.null(margin)) {
       if (margin == "recommended") {
         par(mar = c(1, 2, 0, 1) + 0.1)
@@ -374,11 +354,8 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
     x2 <- x[, colstouse]
     attr(x2, "resref") <- attr(x, "resref")[, colstouse]
 
-    dat <- rbind(x[, colstouse], attr(x, "resref")[, colstouse])
+    dat <- rbind(x2, attr(x, "resref")[, colstouse])
     attr(dat, "resref") <- attr(x, "resref")[, colstouse]
-
-    # get arrow coordinates
-    arrow <- match.arg(arrow)
 
     if (arrow != "none") {
       arrowstart <- switch(arrow,
@@ -461,7 +438,7 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
 
     # Blank plot w/ segment
     plotarg <- arg
-    plotarg[names(as.list(args(arrows)))] <- NULL
+    plotarg[names(formals(arrows))] <- NULL
     if (arrow != "none") {
       if (is.null(plotarg$xlim)) plotarg$xlim <- range(rbind(x2, labelpos)[, colstouse[1]])
       if (is.null(plotarg$ylim)) plotarg$ylim <- range(rbind(x2, labelpos)[, colstouse[2]])
@@ -496,7 +473,7 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
     P <- do.call(perspbox, plotarg)
 
 
-    # add arrows
+    # Add arrows and labels
     if (arrow != "none") {
       astart <- trans3d(
         rep(arrowstart[, colstouse[1]], 4),
@@ -510,10 +487,8 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
         arrowpos[, colstouse[3]], P
       )
 
-
       arrowarg <- arg
-      arrowarg <- arrowarg[names(as.list(args(arrows)))]
-      arrowarg <- arrowarg[!unlist(lapply(arrowarg, is.null))]
+      arrowarg <- arrowarg[names(arg) %in% names(formals(arrows))]
 
       arrowarg$x0 <- astart$x
       arrowarg$x1 <- aend$x
@@ -521,11 +496,8 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
       arrowarg$y1 <- aend$y
       arrowarg$col <- arrow.col
 
-
       do.call(arrows, arrowarg)
-    }
 
-    if (arrow != "none") {
       if (arrow.labels) {
         if (achro) {
           lbl <- c("S", "M", "L", "lum")
@@ -535,31 +507,16 @@ jndplot <- function(x, arrow = c("relative", "absolute", "none"), achro = FALSE,
 
         lpos <- trans3d(labelpos[, 1], labelpos[, 2], labelpos[, 3], P)
 
-        text(lbl[1],
-          x = lpos$x[1], y = lpos$y[1], xpd = TRUE,
-          cex = labels.cex, col = arrow.col
-        )
-        text(lbl[2],
-          x = lpos$x[2], y = lpos$y[2], xpd = TRUE,
-          cex = labels.cex, col = arrow.col
-        )
-        text(lbl[3],
-          x = lpos$x[3], y = lpos$y[3], xpd = TRUE,
-          cex = labels.cex, col = arrow.col
-        )
-        text(lbl[4],
-          x = lpos$x[4], y = lpos$y[4], xpd = TRUE,
-          cex = labels.cex, col = arrow.col
-        )
+        text(lpos, lbl, xpd = TRUE, cex = labels.cex, col = arrow.col)
       }
     }
 
     # Add points
     pointsarg <- arg
-    pointsarg[names(as.list(args(arrows)))] <- NULL
+    pointsarg[names(formals(arrows))] <- NULL
     pointsarg[setdiff(
       perspargs,
-      names(as.list(args(plot.default)))
+      names(formals(plot.default))
     )] <- NULL
     pointsarg$col <- arg$col
 

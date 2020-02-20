@@ -2,13 +2,14 @@
 % Please edit documentation in R/vol.R
 \name{vol}
 \alias{vol}
-\title{Plot a tetrahedral color space}
+\title{Plot a tetrahedral colour space}
 \usage{
-vol(tcsdata, alpha = 0.2, grid = TRUE, fill = TRUE, new = FALSE,
-  view, scale.y, axis, ...)
+vol(tcsdata, alpha = 0.2, grid = TRUE, fill = TRUE, new = FALSE, ...)
 }
 \arguments{
-\item{tcsdata}{(required) object of class \code{colspace}.}
+\item{tcsdata}{(required) a data frame, possibly a result from the
+\code{\link[=colspace]{colspace()}} or \code{\link[=tcspace]{tcspace()}} function, containing values for the 'x', 'y'
+and 'z' coordinates as columns (labeled as such).}
 
 \item{alpha}{transparency of volume (if \code{fill = TRUE}).}
 
@@ -17,18 +18,26 @@ vol(tcsdata, alpha = 0.2, grid = TRUE, fill = TRUE, new = FALSE,
 \item{fill}{logical. if \code{TRUE} (default), fills the volume defined by the points.}
 
 \item{new}{logical. Should a new plot be started or draw over an open plot?
-(defaults to FALSE)}
+(defaults to \code{FALSE})}
 
-\item{view, scale.y, axis}{deprecated arguments.}
-
-\item{...}{additional graphical options. See \code{\link{polygon}} and \code{\link{tetraplot}}.}
+\item{...}{additional graphical options. See \code{\link[=polygon]{polygon()}} and \code{\link[=tetraplot]{tetraplot()}}.}
 }
 \value{
-\code{vol} creates a 3D convex hull within a static tetrahedral plot.
+\code{\link[=vol]{vol()}} creates a 3D convex hull within a static tetrahedral plot.
 }
 \description{
-Produces a 3D convex hull in tetrahedral color space when plotting a
+Produces a 3D convex hull in tetrahedral colour space when plotting a
 non-interactive tetrahedral plot.
+}
+\examples{
+
+# For plotting
+data(sicalis)
+vis.sicalis <- vismodel(sicalis, visual = "avg.uv")
+tcs.sicalis <- colspace(vis.sicalis, space = "tcs")
+plot(tcs.sicalis)
+vol(tcs.sicalis)
+
 }
 \author{
 Rafael Maia \email{rm72@zips.uakron.edu}

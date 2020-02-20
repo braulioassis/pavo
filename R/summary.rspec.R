@@ -1,21 +1,20 @@
-#' Colorimetric variables
+#' Colourimetric variables
 #'
-#' Calculates all 23 colorimetric variables reviewed in
-#' Montgomerie (2006).
+#' Calculates all 23 colourimetric variables reviewed in Montgomerie (2006).
 #'
-#' @param object (required) a data frame, possibly an object of class \code{rspec},
+#' @param object (required) a data frame, possibly an object of class `rspec`,
 #' with a column with wavelength data, named 'wl', and the remaining column containing
 #' spectra to process.
-#' @param subset Either \code{FALSE} (the default), \code{TRUE}, or a character vector.
-#' If \code{FALSE}, all variables calculated are returned. If \code{TRUE}, only a subset
+#' @param subset Either `FALSE` (the default), `TRUE`, or a character vector.
+#' If `FALSE`, all variables calculated are returned. If `TRUE`, only a subset
 #' of the complete output (composed of B2, S8 and H1; the variables described in
 #' Andersson and Prager 2006) are returned. Finally, a user-specified string of variable
 #' names can be used in order to filter and show only those variables.
 #' @param wlmin,wlmax minimum and maximum used to define the range of wavelengths used in
-#' calculations (default is to use entire range in the \code{rspec} object).
+#' calculations (default is to use entire range in the `rspec` object).
 #' @param ... class consistency (ignored)
 #'
-#' @return A data frame containing either 23 or 5 (\code{subset = TRUE}) variables described
+#' @return A data frame containing either 23 or 5 (`subset = TRUE`) variables described
 #' in Montgomerie (2006) with spectra name as row names.
 #' The colorimetric variables calculated by this function are
 #' described in Montgomerie (2006) with corrections included in the README CLR
@@ -72,7 +71,7 @@
 #' S8 (Chroma): (Rmax - Rmin)/B2. Because it uses both Rmin and Rmax, this measure may be
 #' sensitive to spectral noise. REF 3, 13
 #'
-#' S9 (Carotenoid chroma): (R700 - R450)/R700. Should only be used when the color
+#' S9 (Carotenoid chroma): (R700 - R450)/R700. Should only be used when the colour
 #' of the surface is clearly due to carotenoid pigmentation and R450 is lower than
 #' R700. Could be sensitive to noise. REF 8
 #'
@@ -101,13 +100,11 @@
 #'
 #' @export
 #'
-#' @examples \dontrun{
+#' @examples
 #' data(sicalis)
 #' summary(sicalis)
 #' summary(sicalis, subset = TRUE)
-#' summary(sicalis, subset = c('B1', 'H4'))
-#' }
-#'
+#' summary(sicalis, subset = c("B1", "H4"))
 #' @author Pierre-Paul Bitton \email{bittonp@@windsor.ca}, Rafael Maia \email{rm72@@zips.uakron.edu}
 #'
 #' @references Montgomerie R. 2006. Analyzing colors. In Hill, G.E, and McGraw, K.J., eds.
@@ -153,7 +150,7 @@
 #' variation in ultraviolet-blue plumage colour. Proceedings of the Royal Society B
 #' 270:1455-1460.
 #'
-#' 12- Siefferman, L. and G. Hill. 2005. Uv-blue structural coloration and competition for nestboxes in male
+#' 12- Siefferman, L. and G. Hill. 2005. UV-blue structural coloration and competition for nestboxes in male
 #' eastern bluebirds. Animal Behaviour 69:67-72.
 #'
 #' 13- Smiseth, P., J. Ornborg, S. Andersson, and T. Amundsen. 2001. Is male plumage reflectance
@@ -161,11 +158,11 @@
 #'
 summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mincustom = NULL,
                           maxcustom = NULL, h1threshold = NULL, ...) {
-  wl_index <- which(names(object) == "wl")
-  wl <- object[, wl_index]
-  # object <- object[,-wl_index]
+  chkDots(...)
 
-  # set WL min & max
+  wl <- isolate_wl(object, keep = "wl")
+
+  # Set WL min & max
   lambdamin <- max(wlmin, min(wl))
   lambdamax <- min(wlmax, max(wl))
 
@@ -176,25 +173,22 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mi
     stop("wlmax is larger than the range of spectral data")
   }
 
-  # restrict to range of wlmin:wlmax
+  # Restrict to range of wlmin:wlmax
   object <- object[which(wl == lambdamin):which(wl == lambdamax), ]
-  wl <- object[, wl_index]
 
-  select <- (1:ncol(object))[-wl_index]
-  # object <- object[,-wl_index]
-  object <- object[, select, drop = FALSE]
-
+  wl <- isolate_wl(object, keep = "wl")
+  object <- isolate_wl(object, keep = "spec")
 
   output.mat <- matrix(nrow = ncol(object), ncol = 25)
 
   # Three measures of brightness
-  B1 <- sapply(object, sum)
+  B1 <- colSums(object)
 
-  B2 <- sapply(object, mean)
+  B2 <- colMeans(object)
 
-  B3 <- sapply(object, max)
+  B3 <- vapply(object, max, numeric(1))
 
-  Rmin <- sapply(object, min)
+  Rmin <- vapply(object, min, numeric(1))
 
   Rmid <- (B3 + Rmin) / 2
 
@@ -202,7 +196,7 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mi
 
   # Red
   if (lambdamin <= 605 & lambdamax >= 700) {
-    Redchromamat <- object[which(wl == 605):which(wl == 700), , drop = FALSE] # red 605-700nm inclusive
+    Redchromamat <- object[wl >= 605 & wl <= 700, , drop = FALSE] # red 605-700nm inclusive
     Redchroma <- colSums(Redchromamat) / B1 # S1 red
     output.mat[, 9] <- Redchroma
   } else {
@@ -211,7 +205,7 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mi
 
   # Yellow
   if (lambdamin <= 550 & lambdamax >= 625) {
-    Yellowchromamat <- object[which(wl == 550):which(wl == 625), , drop = FALSE] # yellow 550-625nm
+    Yellowchromamat <- object[wl >= 550 & wl <= 625, , drop = FALSE] # yellow 550-625nm
     Yellowchroma <- colSums(Yellowchromamat) / B1 # S1 yellow
     output.mat[, 8] <- Yellowchroma
   } else {
@@ -220,7 +214,7 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mi
 
   # Green
   if (lambdamin <= 510 & lambdamax >= 605) {
-    Greenchromamat <- object[which(wl == 510):which(wl == 605), , drop = FALSE] # green 510-605nm inlusive
+    Greenchromamat <- object[wl >= 510 & wl <= 605, , drop = FALSE] # green 510-605nm inlusive
     Greenchroma <- colSums(Greenchromamat) / B1 # S1 green
     output.mat[, 7] <- Greenchroma
   } else {
@@ -229,7 +223,7 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mi
 
   # Blue
   if (lambdamin <= 400 & lambdamax >= 510) {
-    Bluechromamat <- object[which(wl == 400):which(wl == 510), , drop = FALSE] # blue 400-510nm inclusive
+    Bluechromamat <- object[wl >= 400 & wl <= 510, , drop = FALSE] # blue 400-510nm inclusive
     Bluechroma <- colSums(Bluechromamat) / B1 # S1 blue
     output.mat[, 6] <- Bluechroma
   } else {
@@ -249,7 +243,7 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mi
 
   # UV
   if (lambdamin <= 400 & lambdamax >= 400) {
-    UVchromamat <- object[which(wl == lambdamin):which(wl == 400), , drop = FALSE]
+    UVchromamat <- object[wl >= lambdamin & wl <= 400, , drop = FALSE]
     UVchroma <- colSums(UVchromamat) / B1 # S1 UV
     output.mat [, 4] <- UVchroma
   } else {
@@ -257,12 +251,12 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mi
   }
 
   if (lambdamin > 300 & lambdamin < 400) {
-    warning(paste("Minimum wavelength is", lambdamin, "; UV-related variables may not be meaningful"), call. = FALSE)
+    warning("Minimum wavelength is ", lambdamin, "; UV-related variables may not be meaningful", call. = FALSE)
   }
 
   # Violet
   if (lambdamin <= 415 & lambdamax >= 415) {
-    Vchromamat <- object[which(wl == lambdamin):which(wl == 415), , drop = FALSE]
+    Vchromamat <- object[wl >= lambdamin & wl <= 415, , drop = FALSE]
     Vchroma <- colSums(Vchromamat) / B1 # S1 Violet
     output.mat[, 5] <- Vchroma
   } else {
@@ -276,10 +270,10 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mi
 
   segmts <- trunc(quantile(lambdamin:lambdamax, names = FALSE))
 
-  Q1 <- which(wl == segmts[1]):which(wl == segmts[2])
-  Q2 <- which(wl == segmts[2]):which(wl == segmts[3])
-  Q3 <- which(wl == segmts[3]):which(wl == segmts[4])
-  Q4 <- which(wl == segmts[4]):which(wl == segmts[5])
+  Q1 <- wl >= segmts[1] & wl <= segmts[2]
+  Q2 <- wl >= segmts[2] & wl <= segmts[3]
+  Q3 <- wl >= segmts[3] & wl <= segmts[4]
+  Q4 <- wl >= segmts[4] & wl <= segmts[5]
 
   S5R <- colSums(object[Q4, , drop = FALSE])
   S5Y <- colSums(object[Q3, , drop = FALSE])
@@ -292,36 +286,36 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mi
 
   # Carotenoid chroma
 
-  R450 <- as.numeric(object[which(wl == 450), ])
-  R700 <- as.numeric(object[which(wl == 700), ])
+  R450 <- as.numeric(object[which(wl == 450), , drop = FALSE])
+  R700 <- as.numeric(object[which(wl == 700), , drop = FALSE])
   Carotchroma <- (R700 - R450) / R700
 
   # H3
-  index_Rmid <- sapply(1:ncol(object), function(x) {
+  index_Rmid <- vapply(seq_len(ncol(object)), function(x) {
     which.min(abs(object[, x] - Rmid[x]))
-  })
+  }, numeric(1))
   H3 <- wl[index_Rmid]
 
   # S7
 
-  S7 <- sapply(1:ncol(object), function(col) {
+  S7 <- vapply(seq_len(ncol(object)), function(col) {
     spec <- object[, col]
     index_Rmid_spec <- index_Rmid[col]
-    spec_low <- spec[1:index_Rmid_spec]
+    spec_low <- spec[seq_len(index_Rmid_spec)]
     spec_high <- spec[index_Rmid_spec:length(spec)]
 
     return(sum(spec_low) - sum(spec_high))
-  })
+  }, numeric(1))
 
   S7 <- S7 / B1
 
 
   # S3
-  S3 <- sapply(1:ncol(object), function(col) {
+  S3 <- vapply(seq_len(ncol(object)), function(col) {
     spec <- object[, col]
     H1_spec <- H1[col]
     sum(spec[wl >= (H1_spec - 50) & wl <= (H1_spec + 50)])
-  })
+  }, numeric(1))
   S3 <- S3 / B1
 
 # S3Cus
@@ -391,13 +385,13 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mi
 
   color.var <- data.frame(output.mat, row.names = names(object))
 
-  names(color.var) <- c(
+  colvarnames <- c(
     "B1", "B2", "B3", "S1U", "S1V", "S1B", "S1G",
     "S1Y", "S1R", "S2", "S3", "S4", "S5", "S6", "S7", "S8",
     "S9", "S10", "H1", "H2", "H3", "H4", "H5", "S1Cus", "S3Cus"
   )
 
-  colvarnames <- names(color.var)
+  names(color.var) <- colvarnames
 
   if (is.logical(subset)) {
     if (subset) {
@@ -408,7 +402,7 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mi
     if (all(subset %in% colvarnames)) {
       color.var <- color.var[subset]
     } else {
-      stop(paste("Names in", dQuote("subset"), "do not match color variable names"))
+      stop("Names in ", dQuote("subset"), " do not match color variable names")
     }
   }
 

@@ -2,44 +2,47 @@
 #'
 #' Produces a Maxwell triangle plot.
 #'
-# #' @usage plot(tridata, ...)
-#'
-#' @param tridata (required) a data frame, possibly a result from the \code{colspace}
-#'  or \code{trispace} function, containing values for the 'x' and 'y' coordinates
-#'  as columns (labeled as such).
-#' @param achro should a point be plotted at the origin (defaults to \code{TRUE})?.
-#' @param labels plot verticy labels? Defaults to \code{TRUE}.
-#' @param labels.cex character expansion factor for category labels when \code{labels = TRUE}).
-#' @param achrosize size of the point at the origin when \code{achro = TRUE} (defaults to 0.8).
-#' @param achrocol color of the point at the origin \code{achro = TRUE} (defaults to \code{'grey'}).
+#' @param tridata (required) a data frame, possibly a result from the
+#'   [colspace()] or [trispace()] function, containing values for the 'x' and
+#'   'y' coordinates as columns (labeled as such).
+#' @param achro should a point be plotted at the origin (defaults to `TRUE`)?
+#' @param labels logical. Should the name of each cone be printed next to the
+#'   corresponding vertex?
+#' @param labels.cex  size of the arrow labels.
+#' @param achrosize size of the point at the origin when `achro = TRUE`
+#'   (defaults to `0.8`).
+#' @param achrocol color of the point at the origin `achro = TRUE` (defaults to
+#'   `'grey'`).
 #' @param out.lwd,out.lcol,out.lty graphical parameters for the plot outline.
 #' @param margins margins for the plot.
 #' @param square logical. Should the aspect ratio of the plot be held to 1:1?
-#' (defaults to \code{TRUE})
-#' @param ... additional graphical options. See \code{\link{par}}.
+#'   (defaults to `TRUE`).
+#' @param gamut logical. Should the polygon showing the possible colours given
+#'   visual system and illuminant used in the analysis (defaults to `FALSE`).
+#'   This option currently only works when `qcatch = Qi`.
+#' @param ... additional graphical options. See [par()].
 #'
-#' @examples \dontrun{
+#' @examples
 #' data(flowers)
-#' vis.flowers <- vismodel(flowers, visual = 'apis')
-#' tri.flowers <- colspace(vis.flowers, space = 'tri')
+#' vis.flowers <- vismodel(flowers, visual = "apis")
+#' tri.flowers <- colspace(vis.flowers, space = "tri")
 #' plot(tri.flowers)
-#' }
-#'
 #' @author Thomas White \email{thomas.white026@@gmail.com}
 #'
 #' @export
 #'
 #' @keywords internal
 #'
-#' @references Kelber A, Vorobyev M, Osorio D. (2003). Animal colour vision
-#'    - behavioural tests and physiological concepts. Biological Reviews, 78,
-#'    81 - 118.
-#' @references Neumeyer C (1980) Simultaneous color contrast in the honeybee.
-#'  Journal of comparative physiology, 139(3), 165-176.
+#' @inherit trispace references
+
 
 triplot <- function(tridata, labels = TRUE, achro = TRUE, achrocol = "grey", achrosize = 0.8,
                     labels.cex = 1, out.lwd = 1, out.lcol = "black", out.lty = 1,
-                    margins = c(1, 1, 2, 2), square = TRUE, ...) {
+                    margins = c(1, 1, 2, 2), square = TRUE, gamut = FALSE, ...) {
+
+  oPar <- par("mar", "pty")
+  on.exit(par(oPar))
+
   par(mar = margins)
 
   if (square) {
@@ -76,9 +79,19 @@ triplot <- function(tridata, labels = TRUE, achro = TRUE, achrocol = "grey", ach
   do.call(plot, c(arg, type = "n"))
 
   # Add lines
-  segments(vert$x[1], vert$y[1], vert$x[2], vert$y[2], lwd = out.lwd, lty = out.lty, col = out.lcol)
-  segments(vert$x[1], vert$y[1], vert$x[3], vert$y[3], lwd = out.lwd, lty = out.lty, col = out.lcol)
-  segments(vert$x[2], vert$y[2], vert$x[3], vert$y[3], lwd = out.lwd, lty = out.lty, col = out.lcol)
+  polygon(vert, lwd = out.lwd, lty = out.lty, border = out.lcol)
+
+  if (gamut) {
+    coords_mono <- attr(tridata, "data.maxgamut")
+    max_gamut <- tryCatch(
+      {
+        convhulln(coords_mono)
+        polygon(coords_mono[sort(c(max_gamut)), ],
+                col = "#55555555", border = NA)
+      },
+      error = function(e) warning("Max gamut cannot be plotted.", call. = FALSE)
+    )
+  }
 
   # Origin
   if (isTRUE(achro)) {
@@ -95,8 +108,11 @@ triplot <- function(tridata, labels = TRUE, achro = TRUE, achrocol = "grey", ach
 
   # Add text (coloured points better as in tcsplot?)
   if (isTRUE(labels)) {
-    text("M", x = -0.76, y = -0.39, xpd = TRUE, cex = labels.cex)
-    text("S", x = 0, y = 0.88, xpd = TRUE, cex = labels.cex)
-    text("L", x = 0.76, y = -0.39, xpd = TRUE, cex = labels.cex)
+    text(vert,
+      labels = c("S", "M", "L"),
+      pos = c(3, 2, 4),
+      xpd = TRUE,
+      cex = labels.cex
+    )
   }
 }

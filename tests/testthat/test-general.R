@@ -1,15 +1,7 @@
-library(pavo)
 context("general")
 
 test_that("Class assignment", {
   data(flowers)
-
-  # Check rspec
-  # See test-S3rspec.R
-
-  # Check vismodel
-  vis.flowers <- vismodel(flowers, visual = "apis")
-  expect_is(vis.flowers, "vismodel")
 
   # Check a few colorspaces
   vis.cie <- vismodel(flowers, vonkries = TRUE, relative = FALSE, achro = "none", visual = "cie10")
@@ -25,10 +17,36 @@ test_that("Class assignment", {
   expect_is(col.hex, "colspace")
 })
 
-test_that("plot utilities", {
-  data(sicalis)
-  #expect_known_hash(spec2rgb(sicalis), "0d3e41a7b6")
+test_that("sensdata", {
+  expect_true(all(names(as.data.frame(vissyst)) %in% names(sensdata("all", "all"))))
+})
 
-  expect_error(spec2rgb(sicalis[300:nrow(sicalis), ]), "full visible range")
-  expect_error(spec2rgb(sicalis[, -1]), "No wavelengths supplied")
+test_that("peakshape", {
+  data(flowers)
+
+  expect_equivalent(round(colSums(peakshape(flowers, select = 1:5, lim = c(300, 700), plot = FALSE)[2:3])), c(216, 2617))
+
+  test <- read.csv("known_output/FWHM_lims.csv")
+  expect_equal(peakshape(test, plot = FALSE)[, 4], c(144, 52))
+
+  expect_warning(peakshape(flowers[, -1], plot = FALSE), "wl column missing")
+
+  expect_equivalent(
+    nrow(peakshape(flowers, grepl("^Hibbertia", colnames(flowers)), plot = FALSE)),
+    6
+  )
+
+  # Double peak
+  dblpkspec <- data.frame(
+    wl = 300:700,
+    spec = dnorm(300:700, 400, 10) + dnorm(300:700, 600, 10)
+  )
+  expect_warning(peakshape(dblpkspec), "Using first peak found")
+
+  expect_null(peakshape(flowers, select = FALSE))
+
+  expect_warning(
+    peakshape(flowers, lim = c(300, 400), plot = FALSE),
+    "incorporate all minima in spectral curves"
+  )
 })

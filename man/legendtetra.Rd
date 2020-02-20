@@ -2,24 +2,41 @@
 % Please edit documentation in R/legendtetra.R
 \name{legendtetra}
 \alias{legendtetra}
-\title{Add legend to a static tetrahedral colorspace}
+\title{Add legend to a static tetrahedral colourspace}
 \usage{
 legendtetra(x = 0.8, y = 1.2, ...)
 }
 \arguments{
-\item{x, y}{position of the legend relative to plot limits
- (usually a value between 0 and 1, but because of the perspective distortion,
+\item{x}{position of the legend relative to plot limits
+(usually a value between 0 and 1, but because of the perspective distortion,
 values greater than 1 are possible)}
 
-\item{...}{additional arguments passed to \code{\link{legend}}.}
+\item{y}{position of the legend relative to plot limits
+(usually a value between 0 and 1, but because of the perspective distortion,
+values greater than 1 are possible)}
+
+\item{...}{additional arguments passed to \code{\link[=legend]{legend()}}.}
 }
 \value{
-\code{legendtetra} adds a legend to a static tetrahedral colorspace plot.
+\code{\link[=legendtetra]{legendtetra()}} adds a legend to a static tetrahedral colourspace plot.
 for additional information on which arguments are necessary and how they are used,
-see \code{\link{legend}}.
+see \code{\link[=legend]{legend()}}.
 }
 \description{
-Adds a legend to a static tetrahedral colorspace plot.
+Adds a legend to a static tetrahedral colourspace plot.
+}
+\examples{
+data(sicalis)
+
+vis_sicalis <- vismodel(sicalis)
+tcs_sicalis <- colspace(vis_sicalis)
+
+cols <- c("#1B9E77", "#D95F02", "#7570B3")
+plot(tcs_sicalis, col = cols)
+legendtetra(
+  legend = c("Crown", "Throat", "Breast"),
+  col = cols, pch = 16
+)
 }
 \author{
 Rafael Maia \email{rm72@zips.uakron.edu}

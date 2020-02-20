@@ -1,36 +1,31 @@
 #' CIE colour spaces
 #'
 #' Calculates coordinates and colorimetric variables that represent reflectance spectra
-#' in either the CIEXYZ (1931), CIELAB (1971), or CIELCH (1971) colourspaces.
+#' in either the CIEXYZ (1931), CIELAB (1971), or CIELCh (1971) colourspaces.
 #'
 #' @param vismodeldata (required) quantum catch color data. Can be either the result
-#'  from \code{\link{vismodel}} or independently calculated data (in the form of a
+#'  from [vismodel()] or independently calculated data (in the form of a
 #'  data frame with three columns representing trichromatic viewer).
-#' @param space (required) Choice between XYZ (1931), LAB (1971), or LCH colour models.
+#' @param space (required) Choice between XYZ (default), LAB, or LCh colour models.
 #'
-#' @return Object of class \code{colspace} containing:
-#'    \itemize{
-#'      \item \code{X, Y, Z}: Tristimulus values.
-#'      \item \code{x, y, z}: Cartesian coordinates, when using \code{space = XYZ}.
-#'      \item \code{L, a, b}: Lightness, \code{L}, and colour-opponent \code{a}
-#'          (redness-greenness) and \code{b} (yellowness-blueness) values, in a
-#'          Cartesian coordinate space. Returned when using \code{space = LAB}.
-#'      \item \code{L, a, b, C, h}: Lightness, \code{L}, colour-opponent \code{a}
-#'          (redness-greenness) and \code{b} (yellowness-blueness) values, as well as
-#'          chroma \code{C} and hue-angle \code{h} (degrees), the latter of which are cylindrical
-#'          representations of \code{a} and \code{b} from the CIELAB model. Returned
-#'          when using \code{space = LCh}.
-#'    }
+#'
+#' @return Object of class [`colspace`] containing:
+#' * `X, Y, Z`: Tristimulus values.
+#' * `x, y, z`: Cartesian coordinates, when using `space = XYZ`.
+#' * `L, a, b`: Lightness, `L`, and colour-opponent `a` (redness-greenness) and
+#' `b` (yellowness-blueness) values, in a Cartesian coordinate space. Returned
+#' when using `space = LAB`.
+#' * `L, a, b, C, h`: Lightness, `L`, colour-opponent `a` (redness-greenness)
+#' and `b` (yellowness-blueness) values, as well as chroma `C` and hue-angle `h`
+#' (degrees), the latter of which are cylindrical representations of `a` and `b`
+#' from the CIELAB model. Returned when using `space = LCh`.
 #'
 #' @examples
-#' \dontrun{
 #' data(flowers)
-#' vis.flowers <- vismodel(flowers, visual = 'cie10', illum = 'D65', vonkries = TRUE, relative = FALSE)
-#' flowers.ciexyz <- colspace(vis.flowers, space = 'ciexyz')
-#' flowers.cielab <- colspace(vis.flowers, space = 'cielab')
-#' flowers.cielch <- colspace(vis.flowers, space = 'cielch')
-#' }
-#'
+#' vis.flowers <- vismodel(flowers, visual = "cie10", illum = "D65", vonkries = TRUE, relative = FALSE)
+#' flowers.ciexyz <- colspace(vis.flowers, space = "ciexyz")
+#' flowers.cielab <- colspace(vis.flowers, space = "cielab")
+#' flowers.cielch <- colspace(vis.flowers, space = "cielch")
 #' @author Thomas White \email{thomas.white026@@gmail.com}
 #'
 #' @export
@@ -49,16 +44,16 @@
 #'  Internationale de l Eclairage.
 
 cie <- function(vismodeldata, space = c("XYZ", "LAB", "LCh")) {
-  space2 <- try(match.arg(space), silent = TRUE)
-  if (inherits(space2, "try-error")) {
-    space <- "XYZ"
-  }
+  space <- tryCatch(match.arg(space),
+    error = function(e) {
+      message("Invalid space arg. Defaulting to XYZ")
+      return("XYZ")
+    }
+  )
 
-  dat <- vismodeldata
-
-  X <- dat[, names(dat) %in% c("X", "cie2_X", "cie10_X")]
-  Y <- dat[, names(dat) %in% c("Y", "cie2_Y", "cie10_Y")]
-  Z <- dat[, names(dat) %in% c("Z", "cie2_Z", "cie10_Z")]
+  X <- vismodeldata[, names(vismodeldata) %in% c("X", "cie2_X", "cie10_X")]
+  Y <- vismodeldata[, names(vismodeldata) %in% c("Y", "cie2_Y", "cie10_Y")]
+  Z <- vismodeldata[, names(vismodeldata) %in% c("Z", "cie2_Z", "cie10_Z")]
 
   # Coordinates in the chosen CIE space
   if (space == "XYZ") {
@@ -69,8 +64,8 @@ cie <- function(vismodeldata, space = c("XYZ", "LAB", "LCh")) {
 
     # Calculate tristimulus values for neutral point. First need to
     # re-grab original sensitivity and illuminant data.
-    S <- attr(dat, "data.visualsystem.chromatic")
-    illum <- attr(dat, "data.illuminant") # Illuminant
+    S <- attr(vismodeldata, "data.visualsystem.chromatic")
+    illum <- attr(vismodeldata, "data.illuminant") # Illuminant
     Xn <- sum(S[, 1] * illum)
     Yn <- sum(S[, 2] * illum)
     Zn <- sum(S[, 3] * illum)
@@ -107,14 +102,12 @@ cie <- function(vismodeldata, space = c("XYZ", "LAB", "LCh")) {
   }
 
   if (space == "XYZ") {
-    res.p <- data.frame(X, Y, Z, x, y, z, row.names = rownames(dat))
+    res <- data.frame(X, Y, Z, x, y, z, row.names = rownames(vismodeldata))
   } else if (space == "LAB") {
-    res.p <- data.frame(X, Y, Z, L, a, b, row.names = rownames(dat))
+    res <- data.frame(X, Y, Z, L, a, b, row.names = rownames(vismodeldata))
   } else if (space == "LCh") {
-    res.p <- data.frame(X, Y, Z, L, a, b, C, h, row.names = rownames(dat))
+    res <- data.frame(X, Y, Z, L, a, b, C, h, row.names = rownames(vismodeldata))
   }
-
-  res <- res.p
 
   class(res) <- c("colspace", "data.frame")
 

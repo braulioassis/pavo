@@ -1,39 +1,27 @@
 #' Plot the colour opponent coding diagram
 #'
-#' Produces a plot based on the colour opponent coding diagram of Backhaus (1991).
+#' Produces a plot based on the colour opponent coding diagram of Backhaus
+#' (1991).
 #'
-# #' @usage plot(cocdata, ...)
-#'
-#' @param cocdata (required) a data frame, possibly a result from the \code{colspace}
-#' or \code{categorical} function, containing values for 'x' and 'y' coordinates
-#' as columns (labeled as such).
-#' @param labels plot axis labels? Defaults to \code{TRUE}.
-#' @param achro should a point be plotted at the origin (defaults to \code{TRUE})?
-#' @param achrosize size of the point at the origin when \code{achro = TRUE} (defaults to \code{0.8}).
-#' @param achrocol color of the point at the origin \code{achro = TRUE} (defaults to \code{'grey'}).
-#' @param labels.cex character expansion factor for category labels when \code{labels = TRUE}).
-#' @param tick.loc a numeric vector specifying the location of tick marks on x & y axes.
-#' @param margins margins for the plot.
-#' @param square logical. Should the aspect ratio of the plot be held to 1:1?
-#' (defaults to \code{TRUE}).
-#' @param ... additional graphical options. See \code{\link{par}}.
+#' @param cocdata (required) a data frame, possibly a result from the
+#'   [colspace()] or [categorical()] function, containing values for 'x' and 'y'
+#'   coordinates as columns (labeled as such).
+#' @param tick.loc a numeric vector specifying the location of tick marks on x &
+#'   y axes.
+#' @inheritParams triplot
 #'
 #' @examples
-#' \dontrun{
 #' data(flowers)
-#' vis.flowers <- vismodel(flowers, visual = 'apis', qcatch = 'Ei', relative = FALSE, vonkries = TRUE)
-#' coc.flowers <- colspace(vis.flowers, space = 'coc')
+#' vis.flowers <- vismodel(flowers, visual = "apis", qcatch = "Ei", relative = FALSE, vonkries = TRUE)
+#' coc.flowers <- colspace(vis.flowers, space = "coc")
 #' plot(coc.flowers)
-#' }
-#'
 #' @author Thomas White \email{thomas.white026@@gmail.com}
 #'
 #' @export
 #'
 #' @keywords internal
 #'
-#' @references Backhaus W. (1991). Color opponent coding in the visual system
-#'  of the honeybee. Vision Research, 31, 1381-1397.
+#' @inherit coc references
 
 cocplot <- function(cocdata, labels = TRUE, labels.cex = 0.9,
                     tick.loc = c(-12, -9, -6, -3, 3, 6, 9, 12),
@@ -52,10 +40,10 @@ cocplot <- function(cocdata, labels = TRUE, labels.cex = 0.9,
     arg$pch <- 19
   }
   if (is.null(arg$xlim)) {
-    arg$xlim <- c(-12, 12)
+    arg$xlim <- range(tick.loc)
   }
   if (is.null(arg$ylim)) {
-    arg$ylim <- c(-12, 12)
+    arg$ylim <- range(tick.loc)
   }
   if (is.null(arg$xlab)) {
     arg$xlab <- ""
@@ -71,8 +59,9 @@ cocplot <- function(cocdata, labels = TRUE, labels.cex = 0.9,
   arg$x <- cocdata$x
   arg$y <- cocdata$y
   arg$axes <- FALSE
+  arg$type <- "n"
 
-  do.call(plot, c(arg, type = "n"))
+  do.call(plot, arg)
   axis(1, at = tick.loc, pos = 0, cex.axis = 0.8) # todo - best way to handle user specs?
   axis(2, at = tick.loc, pos = 0, cex.axis = 0.8, las = 2)
 
@@ -89,8 +78,14 @@ cocplot <- function(cocdata, labels = TRUE, labels.cex = 0.9,
   do.call(points, arg)
 
   # Category labels (todo: make this more flexible/robust?)
-  if (labels == TRUE) {
-    text("B", x = 0, y = 13.5, xpd = TRUE, cex = labels.cex)
-    text("A", x = 13.5, y = 0, xpd = TRUE, cex = labels.cex)
+  if (labels) {
+    text(
+      x = c(max(tick.loc), 0),
+      y = c(0, max(tick.loc)),
+      labels = c("A", "B"),
+      pos = c(4, 3),
+      xpd = TRUE,
+      cex = labels.cex
+    )
   }
 }

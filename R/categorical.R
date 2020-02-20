@@ -3,23 +3,20 @@
 #' Applies the fly categorical colour vision model of Troje (1993)
 #'
 #' @param vismodeldata (required) quantum catch color data. Can be either the result
-#'  from \code{\link{vismodel}} or independently calculated data (in the form of a data frame
+#'  from [vismodel()] or independently calculated data (in the form of a data frame
 #'  with four columns named 'u' ,'s', 'm', 'l', representing a tetrachromatic dipteran viewer).
 #'
-#' @return Object of class \code{colspace} consisting of the following columns:
-#' @return \code{R7p, R7y, R8p, R8y}: the quantum catch data used to
+#' @return Object of class `colspace` consisting of the following columns:
+#' - `R7p, R7y, R8p, R8y`: the quantum catch data used to
 #'  calculate the remaining variables.
-#' @return \code{x, y}: cartesian coordinates in the categorical colour space.
-#' @return \code{r.vec}: the r vector (saturation, distance from the center).
-#' @return \code{category}: fly-colour category. One of \code{p-y-}, \code{p-y+}, \code{p+y-}, \code{p+y+}.
+#' - `x, y`: cartesian coordinates in the categorical colour space.
+#' - `r.vec`: the r vector (saturation, distance from the center).
+#' - `category`: fly-colour category. One of `p-y-`, `p-y+`, `p+y-`, `p+y+`.
 #'
 #' @examples
-#' \dontrun{
 #' data(flowers)
-#' vis.flowers <- vismodel(flowers, visual = 'musca', achro = 'md.r1')
-#' cat.flowers <- colspace(vis.flowers, space = 'categorical')
-#' }
-#'
+#' vis.flowers <- vismodel(flowers, visual = "musca", achromatic = "md.r1")
+#' cat.flowers <- colspace(vis.flowers, space = "categorical")
 #' @author Thomas White \email{thomas.white026@@gmail.com}
 #'
 #' @export
@@ -33,7 +30,7 @@ categorical <- function(vismodeldata) {
   dat <- vismodeldata
 
   # if object is vismodel:
-  if ("vismodel" %in% attr(dat, "class")) {
+  if (is.vismodel(dat)) {
 
     # check if tetrachromat
     if (attr(dat, "conenumb") < 4) {
@@ -46,26 +43,35 @@ categorical <- function(vismodeldata) {
 
     # check if relative
     if (!attr(dat, "relative")) {
-      # dat <- dat[, 1:4]
-      # dat <- dat/apply(dat, 1, sum)
-      # class(dat) <- class(vismodeldata)
       warning("Quantum catch are not relative, which may produce unexpected results", call. = FALSE)
-      # attr(vismodeldata,'relative') <- TRUE
     }
   }
 
   # if not, check if it has more (or less) than 4 columns
 
-  if (!("vismodel" %in% attr(dat, "class"))) {
+  else {
     if (ncol(dat) < 4) {
-      stop("Input data is not a ", dQuote("vismodel"), " object and has fewer than four columns", call. = FALSE)
+      stop("Input data is not a ", dQuote("vismodel"),
+        " object and has fewer than four columns",
+        call. = FALSE
+      )
     }
     if (ncol(dat) == 4) {
-      warning("Input data is not a ", dQuote("vismodel"), " object; treating columns as standardized quantum catch for ", dQuote("u"), ", ", dQuote("s"), ", ", dQuote("m"), ", and ", dQuote("l"), " receptors, respectively", call. = FALSE)
+      warning("Input data is not a ", dQuote("vismodel"),
+        " object; treating columns as standardized quantum catch for ",
+        dQuote("u"), ", ", dQuote("s"), ", ", dQuote("m"), ", and ", dQuote("l"),
+        " receptors, respectively",
+        call. = FALSE
+      )
     }
 
     if (ncol(dat) > 4) {
-      warning("Input data is not a ", dQuote("vismodel"), " object *and* has more than four columns; treating the first four columns as standardized quantum catch for ", dQuote("u"), ", ", dQuote("s"), ", ", dQuote("m"), ", and ", dQuote("l"), " receptors, respectively", call. = FALSE)
+      warning("Input data is not a ", dQuote("vismodel"),
+        " object *and* has more than four columns; treating the first four columns as standardized quantum catch for ",
+        dQuote("u"), ", ", dQuote("s"), ", ", dQuote("m"), ", and ", dQuote("l"),
+        " receptors, respectively",
+        call. = FALSE
+      )
     }
 
     dat <- dat[, 1:4]
@@ -85,7 +91,10 @@ categorical <- function(vismodeldata) {
     R8p <- dat[, "m"]
     R8y <- dat[, "l"]
   } else {
-    warning("Could not find columns named ", dQuote("u"), ", ", dQuote("s"), ", ", dQuote("m"), ", and ", dQuote("l"), ", using first four columns instead.", call. = FALSE)
+    warning("Could not find columns named ", dQuote("u"), ", ", dQuote("s"), ", ",
+      dQuote("m"), ", and ", dQuote("l"), ", using first four columns instead.",
+      call. = FALSE
+    )
     R7p <- dat[, 1]
     R7y <- dat[, 2]
     R8p <- dat[, 3]
@@ -112,12 +121,10 @@ categorical <- function(vismodeldata) {
     }
   }
 
-  res.p <- data.frame(R7p, R7y, R8p, R8y, x, y, row.names = rownames(dat))
+  res <- data.frame(R7p, R7y, R8p, R8y, x, y, row.names = rownames(dat))
 
-  res.p$category <- sapply(1:nrow(res.p), function(x) colcat(res.p[x, ]))
-  res.p$r.vec <- sqrt(res.p$x^2 + res.p$y^2)
-
-  res <- res.p
+  res$category <- vapply(seq_len(nrow(res)), function(x) colcat(res[x, ]), character(1))
+  res$r.vec <- sqrt(res$x^2 + res$y^2)
 
   class(res) <- c("colspace", "data.frame")
 

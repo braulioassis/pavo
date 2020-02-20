@@ -5,24 +5,25 @@
 #' one by one.
 #'
 #' @param x (required) an image of class rimg, or list thereof.
-#' @param axes should axes be drawn? (defaults to \code{TRUE})
+#' @param axes should axes be drawn? (defaults to `TRUE`)
 #' @param col optional vector of colours when plotting colour-classified images.
-#' Defaults to the mean RGB values of the k-means centres (i.e. the average 'original' 
+#' Defaults to the mean RGB values of the k-means centres (i.e. the average 'original'
 #' colours).
-#' @param ... additional graphical parameters. Also see \code{\link{par}}.
+#' @param ... additional graphical parameters. Also see [par()].
 #'
-#' @return a image plot.
+#' @return an image plot.
 #'
 #' @export
 #'
-#' @examples \dontrun{
-#' papilio <- getimg(system.file("testdata/images/papilio.png", package = 'pavo'))
+#' @examples
+#' \dontrun{
+#' papilio <- getimg(system.file("testdata/images/papilio.png", package = "pavo"))
 #' plot(papilio)
 #' papilio_class <- classify(papilio, kcols = 4)
 #' plot(papilio_class)
 #'
 #' # Multiple images
-#' snakes <- getimg(system.file("testdata/images/snakes", package = 'pavo'))
+#' snakes <- getimg(system.file("testdata/images/snakes", package = "pavo"))
 #' plot(snakes)
 #' snakes_class <- classify(snakes, kcols = 3)
 #' plot(snakes_class)
@@ -36,7 +37,7 @@ plot.rimg <- function(x, axes = TRUE, col = NULL, ...) {
   if (!multi_image) {
     defaultrasterImageplot(x, axes = axes, col = col, ...)
   } else {
-    for (i in 1:length(x)) {
+    for (i in seq_along(x)) {
       readline(prompt = "Press [enter] for next plot")
       defaultrasterImageplot(x[[i]], axes = axes, col = col, ...)
     }
@@ -44,8 +45,7 @@ plot.rimg <- function(x, axes = TRUE, col = NULL, ...) {
 }
 
 ## For raw images
-#' @import imager
-#' @importFrom grDevices as.raster
+#' @importFrom grDevices as.raster col2rgb
 #' @importFrom graphics box plot.new plot.window
 defaultrasterImageplot <- function(imagedata, axes, col, ...) {
   if (missing(axes)) axes <- TRUE
@@ -65,18 +65,25 @@ defaultrasterImageplot <- function(imagedata, axes, col, ...) {
       rgbs <- attr(imagedata, "classRGB")
     }
 
-    mapR <- setNames(rgbs$R, 1:nrow(rgbs))
-    mapG <- setNames(rgbs$G, 1:nrow(rgbs))
-    mapB <- setNames(rgbs$B, 1:nrow(rgbs))
+    mapR <- setNames(rgbs$R, seq_len(nrow(rgbs)))
+    mapG <- setNames(rgbs$G, seq_len(nrow(rgbs)))
+    mapB <- setNames(rgbs$B, seq_len(nrow(rgbs)))
     R <- matrix(mapR[img], nrow = nrow(img), dimnames = dimnames(img))
     G <- matrix(mapG[img], nrow = nrow(img), dimnames = dimnames(img))
     B <- matrix(mapB[img], nrow = nrow(img), dimnames = dimnames(img))
 
     imageout <- array(c(R, G, B), dim = c(dim(img)[1], dim(img)[2], 3))
 
-    imagedata2 <- suppressWarnings(as.raster(as.cimg(imageout, cc = 3)))
+    # Convert and transform
+    imagedata2 <- suppressWarnings(as.raster(imageout))
+    imagedata2 <- mirrorx(imagedata2)
+    imagedata2 <- apply(t(as.matrix(imagedata2)), 2, rev)
   } else if (attr(imagedata, "state") == "raw") {
-    imagedata2 <- suppressWarnings(as.raster(as.cimg(imagedata, cc = 3)))
+    # Convert and transform
+    imagedata2 <- as.rimg(imagedata)
+    imagedata2 <- mirrorx(imagedata2)
+    imagedata2 <- rot90(imagedata2)
+    imagedata2 <- suppressWarnings(as.raster(imagedata2))
   }
 
   # Defaults
@@ -99,4 +106,24 @@ defaultrasterImageplot <- function(imagedata, axes, col, ...) {
   }
   title(arg$main, xlab = arg$xlab, ylab = arg$ylab)
   rasterImage(imagedata2, 1, nrow(imagedata2), ncol(imagedata2), 1)
+}
+
+## Rotate matrices 90-degrees
+rot90 <- function(x) {
+  permVec <- c(2, 1, 3:length(dim(x)))
+  rotA <- aperm(x, permVec)
+  rotA <- rotA[dim(x)[2]:1, , ]
+  rotA
+}
+
+## Mirror matrices about x axis
+mirrorx <- function(x) {
+  if (length(dim(x)) == 3) {
+    for (i in seq_len(dim(x)[3])) {
+      x[, , i] <- x[, , i][, rev(seq_len(ncol(x[, , i])))]
+    }
+  } else {
+    x <- x[, rev(seq_len(ncol(x)))]
+  }
+  x
 }

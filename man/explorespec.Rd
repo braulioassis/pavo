@@ -4,18 +4,23 @@
 \alias{explorespec}
 \title{Plot spectral curves}
 \usage{
-explorespec(rspecdata, by = NULL, scale = c("equal", "free"),
-  legpos = "topright", ...)
+explorespec(
+  rspecdata,
+  by = NULL,
+  scale = c("equal", "free"),
+  legpos = "topright",
+  ...
+)
 }
 \arguments{
-\item{rspecdata}{(required) a data frame, possibly an object of class \code{rspec}
-that has wavelength range in the first column, named 'wl', and spectral measurements in the
-remaining columns.}
+\item{rspecdata}{(required) a data frame, possibly of class \code{rspec}, which
+contains a column containing a wavelength range, named 'wl', and spectra
+data in remaining columns.}
 
 \item{by}{number of spectra to include in each graph (defaults to 1)}
 
-\item{scale}{defines how the y-axis should be scaled. \code{'free'}: panels can vary in
-the range of the y-axis; \code{'equal'}: all panels have the y-axis with the same range.}
+\item{scale}{defines how the y-axis should be scaled. \code{"free"}: panels can vary in
+the range of the y-axis; \code{"equal"}: all panels have the y-axis with the same range.}
 
 \item{legpos}{legend position control. Either a vector containing \code{x} and \code{y} coordinates
 or a single keyword from the list: \code{"bottomright"}, \code{"bottom"}, \code{"bottomleft"},
@@ -34,11 +39,9 @@ compare groups of spectra.
 Number of plots presented per page depends on the number of graphs produced.
 }
 \examples{
-\dontrun{
 data(sicalis)
 explorespec(sicalis, 3)
-explorespec(sicalis, 3, ylim = c(0, 100), legpos = c(500, 80))}
-
+explorespec(sicalis, 3, ylim = c(0, 100), legpos = c(500, 80))
 }
 \author{
 Pierre-Paul Bitton \email{bittonp@uwindsor.ca}

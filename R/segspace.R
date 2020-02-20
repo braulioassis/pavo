@@ -2,39 +2,38 @@
 #'
 #' Calculates segment classification measures as defined in Endler (1990).
 #'
-#' @param vismodeldata (required) quantum catch color data. Can be either the result
-#'  from \code{\link{vismodel}} or independently calculated data (in the form of a data frame
-#'  with columns named 'S1', 'S2', 'S3', 'S4', and, optionally, 'lum', representing a generic
-#'  'tetrachromatic' viewer).
+#' @param vismodeldata (required) quantum catch color data. Can be either the
+#'   result from [vismodel()] or independently calculated data (in the form of a
+#'   data frame with columns named 'S1', 'S2', 'S3', 'S4', and, optionally,
+#'   'lum', representing a generic 'tetrachromatic' viewer).
 #'
-#' @return A data frame of class \code{colspace} consisting of the following columns:
-#' @return \code{S1}, \code{S2}, \code{S3}, \code{S4}: the relative reflectance at each
-#' of the four segments.
-#' @return \code{LM}, \code{MS}: segment scores
-#' @return \code{C}, \code{H}, \code{B}: 'chroma', 'hue' (degrees), and 'brightness' in the segment classification space
+#' @return A data frame of class [`colspace`] consisting of the following columns:
+#' * `S1`, `S2`, `S3`, `S4`: the relative reflectance at each of the four
+#' segments.
+#' * `LM`, `MS`: segment scores
+#' * `C`, `H`, `B`: 'chroma', 'hue' (degrees), and 'brightness' in the segment
+#' classification space
 #'
 #' @export
 #'
 #' @keywords internal
 #'
-#' @examples \dontrun{
+#' @examples
 #' data(sicalis)
-#' vis.sic <- vismodel(sicalis, visual = 'segment', achromatic = 'all')
-#' seg.sic <- colspace(vis.sic, space = 'segment')
-#' }
-#'
+#' vis.sic <- vismodel(sicalis, visual = "segment", achromatic = "all")
+#' seg.sic <- colspace(vis.sic, space = "segment")
 #' @author Thomas White \email{thomas.white026@@gmail.com}
 #' @author Pierre-Paul Bitton \email{bittonp@@uwindsor.ca}
 #'
 #' @references Endler, J. A. (1990) On the measurement and classification of
-#' color in studies of animal color patterns. Biological Journal of the Linnean
-#' Society, 41, 315-352.
+#' colour in studies of animal colour patterns. Biological Journal of the
+#' Linnean Society, 41, 315-352.
 
 segspace <- function(vismodeldata) {
   dat <- vismodeldata
 
   # if object is vismodel:
-  if ("vismodel" %in% attr(dat, "class")) {
+  if (is.vismodel(dat)) {
 
     # check if tetrachromat
     if (attr(dat, "conenumb") < 4) {
@@ -44,35 +43,37 @@ segspace <- function(vismodeldata) {
     if (attr(dat, "conenumb") != "seg" & attr(dat, "conenumb") > 4) {
       warning("vismodel input is not tetrachromatic, considering first four columns only", call. = FALSE)
     }
-
-    # check if relative
-    if (!attr(dat, "relative")) {
-      dat <- dat[, 1:4]
-      dat <- dat / apply(dat, 1, sum)
-      class(dat) <- class(vismodeldata)
-      warning("Quantum catch are not relative, and have been transformed", call. = FALSE)
-      attr(vismodeldata, "relative") <- TRUE
-    }
   }
 
   # if not, check if it has more (or less) than 4 columns
-
-  if (!("vismodel" %in% attr(dat, "class"))) {
+  else {
     if (ncol(dat) < 4) {
-      stop("Input data is not a ", dQuote("vismodel"), " object and has fewer than four columns", call. = FALSE)
+      stop("Input data is not a ", dQuote("vismodel"),
+        " object and has fewer than four columns",
+        call. = FALSE
+      )
     }
     if (ncol(dat) == 4) {
-      warning("Input data is not a ", dQuote("vismodel"), " object; treating columns as unstandardized quantum catch for ", dQuote("S1"), ", ", dQuote("S2"), ", ", dQuote("S3"), ", and ", dQuote("S4"), " segments, respectively", call. = FALSE)
+      warning("Input data is not a ", dQuote("vismodel"),
+        " object; treating columns as unstandardized quantum catch for ",
+        dQuote("S1"), ", ", dQuote("S2"), ", ", dQuote("S3"), ", and ", dQuote("S4"),
+        " segments, respectively",
+        call. = FALSE
+      )
     }
 
     if (ncol(dat) > 4) {
-      warning("Input data is not a ", dQuote("vismodel"), " object *and* has more than four columns; treating the first four columns as unstandardized quantum catch for ", dQuote("S1"), ", ", dQuote("S2"), ", ", dQuote("S3"), ", and ", dQuote("S4"), " segments, respectively", call. = FALSE)
+      warning("Input data is not a ", dQuote("vismodel"),
+        " object *and* has more than four columns; treating the first four columns as unstandardized quantum catch for ",
+        dQuote("S1"), ", ", dQuote("S2"), ", ", dQuote("S3"), ", and ", dQuote("S4"), " segments, respectively",
+        call. = FALSE
+      )
     }
 
-    dat <- dat[, 1:4]
+    dat <- dat[, seq_len(4)]
     names(dat) <- c("S1", "S2", "S3", "S4")
 
-    dat <- dat / apply(dat, 1, sum)
+    dat <- dat / rowSums(dat)
     warning("Quantum catch have been transformed to be relative (sum of 1)", call. = FALSE)
     attr(vismodeldata, "relative") <- TRUE
   }
@@ -83,14 +84,22 @@ segspace <- function(vismodeldata) {
     Q3 <- dat[, "S3"]
     Q4 <- dat[, "S4"]
   } else {
-    warning("Could not find columns named ", dQuote("S1"), ", ", dQuote("S2"), ", ", dQuote("S3"), ", and ", dQuote("S4"), ", using first four columns instead.", call. = FALSE)
+    warning("Could not find columns named ",
+      dQuote("S1"), ", ", dQuote("S2"), ", ", dQuote("S3"), ", and ", dQuote("S4"),
+      ", using first four columns instead.",
+      call. = FALSE
+    )
     Q1 <- dat[, 1]
     Q2 <- dat[, 2]
     Q3 <- dat[, 3]
     Q4 <- dat[, 4]
   }
 
-  B <- dat$lum
+  if (!is.null(dat$lum)) {
+    B <- dat$lum
+  } else {
+    B <- NA
+  }
 
   # LM/MS
 
@@ -101,9 +110,7 @@ segspace <- function(vismodeldata) {
   C <- sqrt(LM^2 + MS^2)
   H <- asin(MS / C) * (180 / pi)
 
-  res.p <- data.frame(S1 = Q1, S2 = Q2, S3 = Q3, S4 = Q4, LM, MS, C, H, B, row.names = rownames(dat))
-
-  res <- res.p
+  res <- data.frame(S1 = Q1, S2 = Q2, S3 = Q3, S4 = Q4, LM, MS, C, H, B, row.names = rownames(dat))
 
   class(res) <- c("colspace", "data.frame")
 

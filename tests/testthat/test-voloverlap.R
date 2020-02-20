@@ -1,5 +1,15 @@
-library(pavo)
 context("voloverlap")
+
+test_that("Overlap", {
+  data(sicalis)
+  tcs.sicalis.C <- subset(colspace(vismodel(sicalis)), "C")
+  tcs.sicalis.T <- subset(colspace(vismodel(sicalis)), "T")
+  tcs.sicalis.B <- subset(colspace(vismodel(sicalis)), "B")
+  
+  expect_equivalent(round(sum(voloverlap(tcs.sicalis.T, tcs.sicalis.B)), 5), 0.19728)
+  expect_equivalent(round(sum(voloverlap(tcs.sicalis.T, tcs.sicalis.C)), 7), 9.9e-06)
+  expect_equivalent(round(sum(voloverlap(tcs.sicalis.T, tcs.sicalis.B)[1:2]), 5), 1e-05)
+})
 
 test_that("tcs", {
   data(sicalis)
@@ -10,6 +20,16 @@ test_that("tcs", {
   expect_length(vol_sicalis, 5)
   expect_equal(vol_sicalis$vboth, 1)
   expect_equal(vol_sicalis$vol1, vol_sicalis$vol2)
+})
+
+test_that("tri", {
+  data(sicalis)
+
+  tri_sicalis <- colspace(vismodel(sicalis, visual = "ctenophorus"))
+  vol_sicalis <- voloverlap(tri_sicalis, tri_sicalis)
+
+  expect_length(vol_sicalis, 5)
+  expect_equal(vol_sicalis$overlapvol, 0.00288459)
 })
 
 test_that("Dataframe", {
@@ -27,7 +47,7 @@ test_that("Dataframe", {
     c(-7, -1, -1)
   )
 
-  expect_error(voloverlap(hrep, qux), "dimnames")
+  #  expect_error(voloverlap(hrep, qux), "dimnames")
 
   colnames(hrep) <- c("x", "y", "z")
   colnames(qux) <- c("x", "y", "z")

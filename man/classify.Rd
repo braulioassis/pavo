@@ -4,13 +4,28 @@
 \alias{classify}
 \title{Identify colour classes in an image for adjacency analyses}
 \usage{
-classify(imgdat, kcols = NULL, refID = NULL, interactive = FALSE,
-  plotnew = FALSE, col = "red", cores = getOption("mc.cores", 2L),
-  ...)
+classify(
+  imgdat,
+  method = c("kMeans", "kMedoids"),
+  kcols = NULL,
+  refID = NULL,
+  interactive = FALSE,
+  plotnew = FALSE,
+  col = "red",
+  cores = NULL,
+  ...
+)
 }
 \arguments{
 \item{imgdat}{(required) image data. Either a single image, or a series of images
-stored in a list. Preferably the result of \code{\link{getimg}}.}
+stored in a list. Preferably the result of \code{\link[=getimg]{getimg()}}.}
+
+\item{method}{methods for image segmentation/classification.
+\itemize{
+\item \code{'kMeans'}: k-means clustering (default)
+\item \code{'kMedoids'}: k-medoids clustering, using the partitioning-around-medoids ('pam')
+algorithm for large datasets.
+}}
 
 \item{kcols}{the number of discrete colour classes present in the input image(s).
 Can be a single integer when only a single image is present, or if kcols is identical for all
@@ -19,7 +34,7 @@ as \code{imgdat}, or a data.frame with two columns specifying image file names a
 corresponding kcols. This argument can optionally be disregarded when \code{interactive = TRUE},
 and kcols will be inferred from the number of selections.}
 
-\item{refID}{the optional numeric index of a 'reference' image, for use when passing
+\item{refID}{either the numeric index or name of a 'reference' image, for use when passing
 a list of images. Other images will be k-means classified using centres identified
 in the single reference image, thus helping to ensure that homologous pattern elements
 will be reliably classified between images, if so desired.}
@@ -34,37 +49,43 @@ Defaults to \code{FALSE}.}
 
 \item{col}{the color of the marker points, when \code{interactive = TRUE}.}
 
-\item{cores}{number of cores to be used in parallel processing. If \code{1}, parallel
-computing will not be used. Defaults to \code{getOption("mc.cores", 2L)}. Not
-available on Windows.}
+\item{cores}{deprecated. See \code{\link[future:plan]{future::plan()}} for more details on how to
+customise your parallelisation strategy.}
 
 \item{...}{additional graphical parameters when \code{interactive = TRUE}.
-Also see \code{\link{par}}.}
+Also see \code{\link[graphics:par]{graphics::par()}}.}
 }
 \value{
 A matrix, or list of matrices, of class \code{rimg} containing the colour
 class classifications ID at each pixel location. The RGB values corresponding to
-k-means centres (i.e. colour classes) are stored as object attributes.
+cluster centres (i.e. colour classes) are stored as object attributes.
 }
 \description{
-Use k-means clustering to classify image pixels into discrete colour classes.
+Classify image pixels into discrete colour classes.
+}
+\details{
+You can customise the type of parallel processing used by this function with
+the \code{\link[future:plan]{future::plan()}} function. This works on all operating systems, as well
+as high performance computing (HPC) environment. Similarly, you can customise
+the way progress is shown with the \code{\link[progressr:handlers]{progressr::handlers()}} functions
+(progress bar, acoustic feedback, nothing, etc.)
 }
 \note{
 Since the \code{kmeans} process draws on random numbers to find initial
-cluster centres when \code{interactive = FALSE}, use \code{set.seed} if reproducible
+cluster centres when \code{interactive = FALSE}, use \code{\link[=set.seed]{set.seed()}} if reproducible
 cluster ID's are desired between runs.
 }
 \examples{
-\dontrun{
 # Single image
-papilio <- getimg(system.file("testdata/images/papilio.png", package = 'pavo'))
+papilio <- getimg(system.file("testdata/images/papilio.png", package = "pavo"))
 papilio_class <- classify(papilio, kcols = 4)
 
 # Multiple images, with interactive classification and a reference image
-snakes <- getimg(system.file("testdata/images/snakes", package = 'pavo'))
-snakes_class <- classify(snakes, refID = 1, interactive = TRUE)
+snakes <- getimg(system.file("testdata/images/snakes", package = "pavo"))
+# snakes_class <- classify(snakes, refID = "snake_01", interactive = TRUE)
 }
-
+\seealso{
+\link[stats:kmeans]{stats::kmeans}
 }
 \author{
 Thomas E. White \email{thomas.white026@gmail.com}

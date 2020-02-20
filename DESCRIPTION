@@ -1,41 +1,65 @@
 Package: pavo
-Description: A cohesive framework for parsing, analyzing and organizing color from spectral data.
-Title: Perceptual Analysis, Visualization and Organization of Spectral Color
-    Data in R
-Version: 2.0.0
+Title: Perceptual Analysis, Visualization and Organization of
+    Spectral Colour Data
+Version: 2.4.0
+Authors@R: 
+    c(person(given = "Rafael",
+             family = "Maia",
+             role = c("aut", "cre"),
+             email = "rafa.maia@gmail.com",
+             comment = c(ORCID = "0000-0002-7563-9795")),
+      person(given = "Thomas",
+             family = "White",
+             role = "aut",
+             email = "thomas.white026@gmail.com",
+             comment = c(ORCID = "0000-0002-3976-1734")),
+      person(given = "Hugo",
+             family = "Gruson",
+             role = "aut",
+             email = "hugo.gruson+R@normalesup.org",
+             comment = c(ORCID = "0000-0002-4094-1476")),
+      person(given = "John",
+             family = "Endler",
+             role = "aut",
+             email = "john.endler@deakin.edu.au"),
+      person(given = "Chad",
+             family = "Eliason",
+             role = "aut",
+             email = "cme16@zips.uakron.edu"),
+      person(given = "Pierre-Paul",
+             family = "Bitton",
+             role = "aut",
+             email = "bittonp@uwindsor.ca",
+             comment = c(ORCID = "0000-0001-5984-2331")))
+Description: A cohesive framework for parsing, analyzing and
+    organizing colour from spectral data.
 License: GPL (>= 2)
-Date: 2018-09-17
-Encoding: UTF-8
-Authors@R: c(person("Rafael", "Maia", role = c("aut", "cre"),
-    email = "rm72@zips.uakron.edu"),
-    person("Thomas", "White", role = "aut",
-    email = "thomas.white026@gmail.com"),
-    person("Hugo", "Gruson", role = "aut",
-    email = "hugo.gruson+R@normalesup.org"),
-    person("Chad", "Eliason", role = "aut",
-    email = "cme16@zips.uakron.edu"),
-    person("Pierre-Paul", "Bitton", role = "aut",
-    email = "bittonp@uwindsor.ca")
-    )
-Maintainer: Rafael Maia <rm72@zips.uakron.edu>
-URL: http://rafaelmaia.net/pavo/
+URL: http://pavo.colrverse.com, https://github.com/rmaia/pavo/
+BugReports: https://github.com/rmaia/pavo/issues
 Depends:
-    R(>= 2.10)
+    R (>= 3.5.0)
 Imports:
-    rcdd,
-    mapproj,
-    geometry,
-    pbmcapply,
-    utils,
+    cluster,
+    future.apply,
+    geometry(>= 0.4.0),
+    lightr(>= 1.0),
+    magick,
     plot3D,
-    imager,
-    stats,
-    sp
+    progressr,
+    sp,
+    viridisLite
 Suggests:
-    rgl,
-    xml2,
-    testthat,
+    digest,
+    imager,
     knitr,
-    covr
-VignetteBuilder: knitr
-RoxygenNote: 6.1.0
+    mapproj,
+    NbClust,
+    rgl,
+    rmarkdown,
+    testthat(>= 2.1.0),
+VignetteBuilder: 
+    knitr
+Encoding: UTF-8
+Language: en-GB
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.0.2

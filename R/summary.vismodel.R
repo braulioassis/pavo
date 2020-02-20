@@ -1,20 +1,19 @@
 #' Visual model summary
 #'
-#' Returns the attributes used when calculating a visual model using \code{vismodel}
+#' Returns the attributes used when calculating a visual model using [vismodel()]
 #'
-#' @param object (required) Results of \code{vismodel}
+#' @param object (required) Results of [vismodel()]
 #' @param ... class consistency (ignored)
 #'
 #' @return Returns all attributes chosen when calculating the visual model, as well as the
-#' default \code{data.frame} summary
+#' default `data.frame` summary
 #'
 #' @export
 #'
-#' @examples \dontrun{
+#' @examples
 #' data(sicalis)
-#' vis.sicalis <- vismodel(sicalis, visual='avg.uv')
+#' vis.sicalis <- vismodel(sicalis, visual = "avg.uv")
 #' summary(vis.sicalis)
-#' }
 #' @author Rafael Maia \email{rm72@@zips.uakron.edu}
 #' @references Vorobyev, M., Osorio, D., Bennett, A., Marshall, N., & Cuthill, I. (1998).
 #'  Tetrachromacy, oil droplets and bird plumage colours. Journal Of Comparative
@@ -28,6 +27,8 @@
 #'  as birds see them. Biological Journal Of The Linnean Society, 86(4), 405-431.
 
 summary.vismodel <- function(object, ...) {
+  chkDots(...)
+
   if (is.null(attr(object, "qcatch"))) {
     message("Cannot return full vismodel summary on subset data")
     return(summary(as.data.frame(object)))

@@ -1,46 +1,42 @@
-#' Plot a tetrahedral color space
+#' Plot a tetrahedral colour space
 #'
-#' Produces a 3D convex hull in tetrahedral color space when plotting a
+#' Produces a 3D convex hull in tetrahedral colour space when plotting a
 #' non-interactive tetrahedral plot.
 #'
-#' @param tcsdata (required) object of class \code{colspace}.
-#' @param alpha transparency of volume (if \code{fill = TRUE}).
-#' @param grid logical. if \code{TRUE} (default), draws the polygon outline defined by the points.
-#' @param fill logical. if \code{TRUE} (default), fills the volume defined by the points.
+#' @inheritParams tcsplot
+#' @param alpha transparency of volume (if `fill = TRUE`).
+#' @param grid logical. if `TRUE` (default), draws the polygon outline defined by the points.
+#' @param fill logical. if `TRUE` (default), fills the volume defined by the points.
 #' @param new logical. Should a new plot be started or draw over an open plot?
-#' (defaults to FALSE)
-#' @param view,scale.y,axis deprecated arguments.
-#' @param ... additional graphical options. See \code{\link{polygon}} and \code{\link{tetraplot}}.
+#' (defaults to `FALSE`)
+#' @param ... additional graphical options. See [polygon()] and [tetraplot()].
 #'
-#' @return \code{vol} creates a 3D convex hull within a static tetrahedral plot.
+#' @return [vol()] creates a 3D convex hull within a static tetrahedral plot.
 #'
 #' @author Rafael Maia \email{rm72@@zips.uakron.edu}
 #'
 #' @export
 #'
+#' @examples
+#'
+#' # For plotting
+#' data(sicalis)
+#' vis.sicalis <- vismodel(sicalis, visual = "avg.uv")
+#' tcs.sicalis <- colspace(vis.sicalis, space = "tcs")
+#' plot(tcs.sicalis)
+#' vol(tcs.sicalis)
+#'
+#' @importFrom geometry convhulln
+#' @importFrom grDevices trans3d adjustcolor
+#'
 
 vol <- function(tcsdata, alpha = 0.2, grid = TRUE, fill = TRUE,
-                new = FALSE, view, scale.y, axis, ...) {
-  if (!missing(view)) {
-    stop('argument "view" is deprecated, please use "theta" and "phi" instead. see ?plot.colspace or ?tetraplot for more information.', call. = FALSE)
-  }
-  if (!missing(scale.y)) {
-    stop('argument "scale.y" is deprecated, please use "expand" instead. see ?plot.colspace or ?tetraplot for more information.', call. = FALSE)
-  }
-  if (!missing(axis)) {
-    stop('argument "axis" is deprecated, please use "box" instead. see ?plot.colspace or ?tetraplot for more information.', call. = FALSE)
-  }
-
-
+                new = FALSE, ...) {
   if (!is.null(attr(tcsdata, "clrsp")) && attr(tcsdata, "clrsp") != "tcs") stop("object is not in tetrahedral color space")
 
-  vol <- t(convhulln(tcsdata[, c("x", "y", "z")], options = "FA")$hull)
   coords <- tcsdata[, c("x", "y", "z")]
-  listvol <- split(vol, rep(1:ncol(vol), each = nrow(vol)))
-  ppairs <- do.call(rbind, lapply(listvol, function(x) t(combn(x, 2))))
 
-  # check if there is a plot
-  isthereplot <- try(get("last_plot.tetra", envir = .PlotTetraEnv), silent = TRUE)
+  vol <- t(convhulln(coords, options = "FA")$hull)
 
   arg <- list(...)
 
@@ -110,19 +106,17 @@ vol <- function(tcsdata, alpha = 0.2, grid = TRUE, fill = TRUE,
   }
 
   darkcolor <- arg$col
-  alphacolor <- rgb(t(col2rgb(arg$col)), alpha = alpha * 255, maxColorValue = 255)
+  alphacolor <- adjustcolor(arg$col, alpha.f = alpha)
 
   if (fill) {
     arg$border <- NA
     arg$col <- alphacolor
+  } else {
+    arg$col <- NA
   }
 
   if (grid) {
     arg$border <- darkcolor
-  }
-
-  if (!fill) {
-    arg$col <- NA
   }
 
   # CRAN won't accept triple : arguments and persp.default is not exported,
@@ -136,7 +130,7 @@ vol <- function(tcsdata, alpha = 0.2, grid = TRUE, fill = TRUE,
   arg[perspargs] <- NULL
 
 
-  for (i in 1:ncol(vol)) {
+  for (i in seq_len(ncol(vol))) {
     arg$x <- flatcoords[vol[, i], "x"]
     arg$y <- flatcoords[vol[, i], "y"]
 

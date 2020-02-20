@@ -1,50 +1,49 @@
 #' Convert JND distances into perceptually-corrected Cartesian coordinates
 #'
-#' Converts a \code{coldist} output into Cartesian coordinates that are
+#' Converts a [coldist()] output into Cartesian coordinates that are
 #' perceptually-corrected (i.e. Euclidean distances = JND distances)
 #'
-#' @param coldistres (required) the output from a \code{coldist} call.
+#' @param coldistres (required) the output from a [coldist()] call.
 #' @param center logical indicating if the data should be centered on its centroid
-#' (defaults to \code{TRUE}).
-#' @param rotate logical indicating if the data should be rotated (defaults to \code{TRUE}).
+#' (defaults to `TRUE`).
+#' @param rotate logical indicating if the data should be rotated (defaults to `TRUE`).
 #' @param rotcenter should the vectors for rotation be centered in the achromatic
 #' center ("achro") or the data centroid ("mean", the default)?
-#' @param ref1 the cone to be used as a the first reference. May be NULL
+#' @param ref1 the cone to be used as a the first reference. May be `NULL`
 #' (for no first rotation in the 3-dimensional case) or must match name
-#' in the original data that was used for \code{coldist}. Defaults to 'l'.
+#' in the original data that was used for [coldist()]. Defaults to 'l'.
 # " (only used if data has 2 or 3 dimensions)
-#' @param ref2 the cone to be used as a the second reference.May be NULL
+#' @param ref2 the cone to be used as a the second reference. May be `NULL`
 #' (for no first rotation in the 3-dimensional case) or must match name
-#' in the original data that was used for \code{coldist}. Defaults to 'u'.
+#' in the original data that was used for [coldist()]. Defaults to 'u'.
 #' (only used if data has 3 dimensions).
 #' @param axis1 A vector of length 3 composed of 0's and 1's, with
 #' 1's representing the axes (x,y,z) to rotate around. Defaults to c(1,1,0), such
 #' that the rotation aligns with the xy plane (only used if data has 2 or 3 dimensions).
-#' Ignored if \code{ref1} is NULL (in 3-dimensional case only)
+#' Ignored if `ref1` is `NULL` (in 3-dimensional case only)
 #' @param axis2 A vector of length 3 composed of 0's and 1's, with
 #' 1's representing the axes (x,y,z) to rotate around. Defaults to c(0,0,1), such
 #' that the rotation aligns with the z axis (only used if data has 3 dimensions).
-#' Ignored if \code{ref2} is NULL (in 3-dimensional case only)
+#' Ignored if `ref2` is `NULL` (in 3-dimensional case only)
 #'
-#' @examples \dontrun{
+#' @examples
 #' data(flowers)
 #' vis.flowers <- vismodel(flowers)
 #' cd.flowers <- coldist(vis.flowers)
 #' jnd2xyz(cd.flowers)
-#' }
-#'
-#' @author Rafael Maia \email{rm72@zips.uakron.edu}
+#' @author Rafael Maia \email{rm72@@zips.uakron.edu}
 #'
 #' @export
 #'
 #' @references Pike, T.W. (2012). Preserving perceptual distances in chromaticity diagrams.
 #' Behavioral Ecology, 23, 723-728.
 #' @references Maia, R., White, T. E., (2018) Comparing colors using visual models.
-#' Behavioral Ecology, ary017 doi: 10.1093/beheco/ary017.
+#' Behavioral Ecology, ary017 \doi{10.1093/beheco/ary017}
 
 
 jnd2xyz <- function(coldistres, center = TRUE, rotate = TRUE,
-                    rotcenter = c("mean", "achro"), ref1 = "l", ref2 = "u", axis1 = c(1, 1, 0), axis2 = c(0, 0, 1)) {
+                    rotcenter = c("mean", "achro"), ref1 = "l", ref2 = "u",
+                    axis1 = c(1, 1, 0), axis2 = c(0, 0, 1)) {
 
   # Accessory functions
   pos2 <- function(d12, d13, d23) {
@@ -56,7 +55,6 @@ jnd2xyz <- function(coldistres, center = TRUE, rotate = TRUE,
 
     x3
   }
-
 
   # Accessory functions
   pos3 <- function(d12, d13, d23) {
@@ -94,6 +92,11 @@ jnd2xyz <- function(coldistres, center = TRUE, rotate = TRUE,
     grep("jnd2xyzrrf", references$patch2)
   ), ]
 
+  # Strip 'lum' column if it's all NA
+  if (all(is.na(coldistres$dL))) {
+    coldistres <- coldistres[, !names(coldistres) %in% "dL"]
+  }
+
   combined <- rbind(coldistres, references)
 
   colmat <- coldist2mat(combined)
@@ -117,12 +120,13 @@ jnd2xyz <- function(coldistres, center = TRUE, rotate = TRUE,
     coords[ptnames[2], ] <- cdmat[ptnames[1], ptnames[2]]
 
     # subsequent points
-    coords[c(ptnames[-c(1:2)]), ] <- do.call(rbind, lapply(ptnames[-c(1:2)], function(x)
+    coords[c(ptnames[-c(1:2)]), ] <- do.call(rbind, lapply(ptnames[-c(1:2)], function(x) {
       pos2(
         cdmat[ptnames[1], ptnames[2]],
         cdmat[ptnames[1], x],
         cdmat[ptnames[2], x]
-      )))
+      )
+    }))
   }
 
   if (ncone == "3") {
@@ -142,12 +146,13 @@ jnd2xyz <- function(coldistres, center = TRUE, rotate = TRUE,
 
 
     # subsequent points
-    positions <- lapply(ptnames[-c(1:3)], function(x)
+    positions <- lapply(ptnames[-c(1:3)], function(x) {
       pos3(
         cdmat[ptnames[1], ptnames[2]],
         cdmat[ptnames[1], x],
         cdmat[ptnames[2], x]
-      ))
+      )
+    })
     names(positions) <- ptnames[-c(1:3)]
 
 
@@ -189,13 +194,14 @@ jnd2xyz <- function(coldistres, center = TRUE, rotate = TRUE,
     coords[ptnames[4], ] <- fourthpointxyz
 
     # subsequent points
-    positions <- lapply(ptnames[-c(1:4)], function(x)
+    positions <- lapply(ptnames[-c(1:4)], function(x) {
       pos4(
         cdmat[ptnames[1], ptnames[2]],
         cdmat[ptnames[1], x],
         cdmat[ptnames[2], x],
         cdmat[ptnames[3], x]
-      ))
+      )
+    })
     names(positions) <- ptnames[-c(1:4)]
 
 
@@ -221,12 +227,13 @@ jnd2xyz <- function(coldistres, center = TRUE, rotate = TRUE,
     coords[ptnames[2], "lum"] <- ldmat[ptnames[1], ptnames[2]]
 
     # subsequent points
-    coords[c(ptnames[-c(1:2)]), "lum" ] <- do.call(rbind, lapply(ptnames[-c(1:2)], function(x)
+    coords[c(ptnames[-c(1:2)]), "lum" ] <- do.call(rbind, lapply(ptnames[-c(1:2)], function(x) {
       pos2(
         ldmat[ptnames[1], ptnames[2]],
         ldmat[ptnames[1], x],
         ldmat[ptnames[2], x]
-      )))
+      )
+    }))
     # invert if darkest point is positive
 
 

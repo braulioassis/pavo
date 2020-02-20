@@ -1,29 +1,27 @@
 #' Convert coldist to distance matrix
 #'
-#' Converts a \code{coldist} output into a distance matrix where samples
+#' Converts a [coldist()] output into a distance matrix where samples
 #' are rows and columns.
 #'
-#' @param coldistres (required) the output from a \code{coldist} call.
+#' @param coldistres (required) the output from a [coldist()] call.
 #'
 #' @return A list containing one or two matrices, for dS and dL, depending
 #' if the original object had dS and dL columns
 #'
-#' @examples \dontrun{
+#' @examples
 #' data(flowers)
-#' vis.flowers <- vismodel(flowers, achro=TRUE)
-#' cd.flowers <- coldist(vis.flowers)
-#' coldist2mat(cd.flowers)[['dS']]
-#' coldist2mat(cd.flowers)[['dL']]
-#' }
-#'
-#' @author Rafael Maia \email{rm72@zips.uakron.edu}
+#' vis.flowers <- vismodel(flowers, achromatic = "l")
+#' cd.flowers <- coldist(vis.flowers, achromatic = TRUE)
+#' coldist2mat(cd.flowers)[["dS"]]
+#' coldist2mat(cd.flowers)[["dL"]]
+#' @author Rafael Maia \email{rm72@@zips.uakron.edu}
 #'
 #' @export
 #'
 #' @keywords internal
 #'
 #' @references Maia, R., White, T. E., (2018) Comparing colors using visual models.
-#'  Behavioral Ecology, ary017 doi: 10.1093/beheco/ary017.
+#'  Behavioral Ecology, ary017 \doi{10.1093/beheco/ary017}
 
 coldist2mat <- function(coldistres) {
   cdrep <- as.matrix(rbind(coldistres[, c(1, 2, 3)], coldistres[, c(2, 1, 3)]))

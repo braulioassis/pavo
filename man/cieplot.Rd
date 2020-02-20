@@ -4,67 +4,90 @@
 \alias{cieplot}
 \title{CIE plot}
 \usage{
-cieplot(ciedata, mono = TRUE, out.lwd = NULL, out.lcol = "black",
-  out.lty = 1, theta = 45, phi = 10, r = 1e+06, zoom = 1,
-  box = FALSE, margin = c(0, 0, 0, 0), view, scale.y, axis, grid, ...)
+cieplot(
+  ciedata,
+  mono = TRUE,
+  out.lwd = NULL,
+  out.lcol = "black",
+  out.lty = 1,
+  theta = 45,
+  phi = 10,
+  r = 1e+06,
+  zoom = 1,
+  box = FALSE,
+  margin = c(0, 0, 0, 0),
+  ciebg = TRUE,
+  ...
+)
 }
 \arguments{
-\item{ciedata}{(required). a data frame, possibly a result from the \code{colspace}
-or \code{cie} function, containing values for 'x', 'y' and 'z'  coordinates for the CIEXYZ
-model, or LAB coordinates for the CIELAB (or CIELCh models), as columns (labeled as such).}
+\item{ciedata}{(required). a data frame, possibly a result from the
+\code{\link[=colspace]{colspace()}} or \code{\link[=cie]{cie()}} function, containing values for 'x', 'y' and 'z'
+coordinates for the CIEXYZ model, or LAB coordinates for the CIELAB (or
+CIELCh models), as columns (labeled as such).}
 
-\item{mono}{should the monochromatic loci (the 'horseshoe') be
-plotted when \code{space = 'ciexyz'}? Defaults to \code{TRUE}.}
+\item{mono}{should the monochromatic loci (the 'horseshoe') be plotted when
+\code{space = "ciexyz"}? Defaults to \code{TRUE}.}
 
-\item{out.lwd, out.lcol, out.lty}{graphical parameters for the monochromatic loci outline.}
+\item{out.lwd}{graphical parameters for the plot outline.}
 
-\item{theta}{angle to rotate the plot in the xy plane  when \code{space = 'cielab'}
-(defaults to 10).}
+\item{out.lcol}{graphical parameters for the plot outline.}
 
-\item{phi}{angle to rotate the plot in the yz plane  when \code{space = 'cielab'}
+\item{out.lty}{graphical parameters for the plot outline.}
+
+\item{theta}{angle to rotate the plot in the xy plane  when
+\code{space = "cielab"} (defaults to 10).}
+
+\item{phi}{angle to rotate the plot in the yz plane  when \code{space = "cielab"}
 (defaults to 45).}
 
 \item{r}{the distance of the eyepoint from the center of the plotting box
-when \code{space = 'cielab'}. Very high values approximate an orthographic projection
-(defaults to 1e6). See \code{\link{persp}} for details.
-. See \code{\link{persp}} for details.}
+when \code{space = "cielab"}. Very high values approximate an orthographic
+projection (defaults to 1e6). See \code{\link[graphics:persp]{graphics::persp()}} for details.}
 
-\item{zoom}{zooms in (values greater than 1) or out (values between 0 and 1) from the plotting area
-when \code{space = 'cielab'}.}
+\item{zoom}{zooms in (values greater than 1) or out (values between 0 and 1)
+from the plotting area when \code{space = "cielab"}.}
 
-\item{box}{logical. Should the plot area box and axes be plotted? (defaults to \code{FALSE})}
+\item{box}{logical. Should the plot area box and axes be plotted? (defaults
+to \code{FALSE})}
 
-\item{margin}{vector of four numbers specifying drawing margins for CIELAB plot
-(defaults to c(0,0,0,0))}
+\item{margin}{vector of four numbers specifying drawing margins for CIELAB
+plot (defaults to c(0,0,0,0))}
 
-\item{view, }{scale.y, axis, grid deprecated arguments.}
+\item{ciebg}{should the colour background be plotted for CIEXYZ plot?
+(defaults to \code{TRUE})}
 
-\item{...}{Additional graphical options. See \code{\link{par}}.}
+\item{...}{additional graphical options. See \code{\link[=par]{par()}}.}
 }
 \description{
 Plot a CIE (XYZ, LAB, or LCH) chromaticity diagram.
 }
 \examples{
-\dontrun{
 data(flowers)
 
 # CIEXYZ
-vis.flowers <- vismodel(flowers, visual = 'cie10', illum = 'D65', vonkries = TRUE, relative = FALSE)
-xyz.flowers <- colspace(vis.flowers, space = 'ciexyz')
+vis.flowers <- vismodel(flowers, visual = "cie10", illum = "D65", vonkries = TRUE, relative = FALSE)
+xyz.flowers <- colspace(vis.flowers, space = "ciexyz")
 plot(xyz.flowers)
 
-#CIELAB
-lab.flowers <- colspace(vis.flowers, space = 'cielab')
+# CIELAB
+lab.flowers <- colspace(vis.flowers, space = "cielab")
 plot(lab.flowers)
-}
-
 }
 \references{
 Smith T, Guild J. (1932) The CIE colorimetric standards and their use.
-   Transactions of the Optical Society, 33(3), 73-134.
+Transactions of the Optical Society, 33(3), 73-134.
 
 Westland S, Ripamonti C, Cheung V. (2012). Computational colour science
-   using MATLAB. John Wiley & Sons.
+using MATLAB. John Wiley & Sons.
+
+Stockman, A., & Sharpe, L. T. (2000). Spectral sensitivities of
+the middle- and long-wavelength sensitive cones derived from measurements in
+observers of known genotype. Vision Research, 40, 1711-1737.
+
+CIE (2006). Fundamental chromaticity diagram with physiological axes.
+Parts 1 and 2. Technical Report 170-1. Vienna: Central Bureau of the Commission
+Internationale de l Eclairage.
 }
 \author{
 Thomas White \email{thomas.white026@gmail.com}
