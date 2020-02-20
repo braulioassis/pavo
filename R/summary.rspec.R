@@ -156,7 +156,8 @@
 #' 13- Smiseth, P., J. Ornborg, S. Andersson, and T. Amundsen. 2001. Is male plumage reflectance
 #' correlated with paternal care in bluethroats? Behavioural Ecology 12:164-170.
 #'
-summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, ...) {
+summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, mincustom = NULL,
+                          maxcustom = NULL, h1threshold = NULL, ...) {
   chkDots(...)
 
   wl <- isolate_wl(object, keep = "wl")
@@ -178,7 +179,7 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, ..
   wl <- isolate_wl(object, keep = "wl")
   object <- isolate_wl(object, keep = "spec")
 
-  output.mat <- matrix(nrow = ncol(object), ncol = 23)
+  output.mat <- matrix(nrow = ncol(object), ncol = 25)
 
   # Three measures of brightness
   B1 <- colSums(object)
@@ -227,6 +228,17 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, ..
     output.mat[, 6] <- Bluechroma
   } else {
     warning("cannot calculate blue chroma; wavelength range not between 400 and 510 nm", call. = FALSE)
+  }
+
+  # Custom
+  if(!is.null(mincustom) && !is.null(maxcustom)){
+    if (lambdamin <= mincustom & lambdamax >= maxcustom) {
+      Customchromamat <- object[which(wl == mincustom):which(wl == maxcustom), , drop = FALSE] # user defined range, inclusive
+      Customchroma <- colSums(Customchromamat) / B1 # S1 red
+      output.mat[, 24] <- Customchroma
+    } else {
+      warning("cannot calculate custom chroma; wavelength range not between", mincustom, "and ", maxcustom, " nm", call. = FALSE)
+    }
   }
 
   # UV
@@ -306,6 +318,18 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, ..
   }, numeric(1))
   S3 <- S3 / B1
 
+# S3Cus
+  S3Cus <- sapply(1:ncol(object), function(col) {
+    spec <- object[, col]
+    H1_spec <- H1[col]
+    if (H1_spec > h1threshold) {
+    H1_spec<-h1threshold
+  }
+    sum(spec[wl >= (H1_spec - 50) & wl <= (H1_spec + 50)])
+  })
+  S3Cus <- S3Cus / B1
+
+
   # Spectral saturation
   S2 <- B3 / Rmin # S2
 
@@ -354,6 +378,7 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, ..
   output.mat[, 21] <- H3 # Rmid
   output.mat[, 22] <- H4
   output.mat[, 23] <- lambdabmax
+  output.mat[, 25] <- S3Cus
 
   # PPB added S1v and S1Y
 
@@ -363,7 +388,7 @@ summary.rspec <- function(object, subset = FALSE, wlmin = NULL, wlmax = NULL, ..
   colvarnames <- c(
     "B1", "B2", "B3", "S1U", "S1V", "S1B", "S1G",
     "S1Y", "S1R", "S2", "S3", "S4", "S5", "S6", "S7", "S8",
-    "S9", "S10", "H1", "H2", "H3", "H4", "H5"
+    "S9", "S10", "H1", "H2", "H3", "H4", "H5", "S1Cus", "S3Cus"
   )
 
   names(color.var) <- colvarnames
